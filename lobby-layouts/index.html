@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Various Lobby Layout Entry Point</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,500..600&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg: #FAF6EE;
+    --surface: #FFFFFF;
+    --surface-2: #F2E9D6;
+    --text: #1B160F;
+    --text-dim: #6E6455;
+    --border: #E4D8BE;
+    --accent: #A9711A;
+    --accent-2: #7A5313;
+    --accent-ink: #FFFFFF;
+    --shadow: 0 1px 2px rgba(27,22,15,.04), 0 8px 24px rgba(27,22,15,.06);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #14110C;
+      --surface: #1D1912;
+      --surface-2: #262019;
+      --text: #F3ECDD;
+      --text-dim: #AA9F89;
+      --border: #362F20;
+      --accent: #E7A93E;
+      --accent-2: #C98F2E;
+      --accent-ink: #1B160F;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.45);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #14110C;
+    --surface: #1D1912;
+    --surface-2: #262019;
+    --text: #F3ECDD;
+    --text-dim: #AA9F89;
+    --border: #362F20;
+    --accent: #E7A93E;
+    --accent-2: #C98F2E;
+    --accent-ink: #1B160F;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.45);
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box;}
+  html{font-size:113%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Archivo', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.65;
+  }
+  h1,h2,h3{
+    font-family:'Fraunces', Georgia, serif;
+    font-weight:600;
+    text-wrap:balance;
+    margin:0;
+    color:var(--text);
+    font-variation-settings:"SOFT" 20;
+  }
+  .mono{
+    font-family:'IBM Plex Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  a{color:inherit;}
+  p{margin:0;}
+  ul{margin:0; padding:0; list-style:none;}
+  img,video{max-width:100%;}
+
+  /* ---------- top bar / site nav ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    background:color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom:1px solid var(--border);
+  }
+  .topbar-inner{
+    max-width:1680px; margin:0 auto; padding:16px 48px;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px;
+  }
+  .brand{font-size:.82rem; letter-spacing:.02em; color:var(--text-dim); text-decoration:none;}
+  .brand b{color:var(--text); font-weight:600;}
+  .topnav{display:flex; align-items:center; gap:22px;}
+  .topnav a{
+    font-family:'IBM Plex Mono', monospace; font-size:.74rem; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--text-dim); text-decoration:none;
+  }
+  .topnav a:hover{color:var(--accent);}
+  .topbar-right-group{display:flex; align-items:center; gap:22px;}
+  .topbar-right{color:var(--text-dim); font-family:'IBM Plex Mono', monospace; font-size:.74rem; letter-spacing:.04em;}
+  .hamburger{
+    appearance:none; border:none; background:none;
+    border-radius:6px; width:38px; height:38px; flex:none;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    padding:0;
+  }
+  .hamburger:hover{background:var(--surface-2);}
+  .hamburger:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .hamburger svg{display:block; width:16px; height:16px;}
+  .hamburger svg line{stroke:var(--text); stroke-width:1.6; transition:transform .18s ease, opacity .18s ease;}
+  .hamburger[aria-expanded="true"] .l1{transform:translateY(5.5px) rotate(45deg);}
+  .hamburger[aria-expanded="true"] .l2{opacity:0;}
+  .hamburger[aria-expanded="true"] .l3{transform:translateY(-5.5px) rotate(-45deg);}
+
+  /* project switcher drawer */
+  .drawer-scrim{
+    position:fixed; inset:0; background:rgba(20,17,12,.4);
+    opacity:0; visibility:hidden; transition:opacity .2s ease, visibility .2s;
+    z-index:55;
+  }
+  .drawer-scrim.is-open{opacity:1; visibility:visible;}
+  .drawer{
+    position:fixed; top:0; right:0; height:100%; width:min(400px, 88vw);
+    background:var(--surface); border-left:1px solid var(--border);
+    z-index:56; padding:22px 26px 26px;
+    transform:translateX(100%); transition:transform .22s ease;
+    overflow-y:auto;
+  }
+  .drawer.is-open{transform:translateX(0);}
+  .drawer-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:26px;}
+  .drawer-label{font-family:'IBM Plex Mono', monospace; font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text-dim);}
+  .drawer-close{
+    appearance:none; border:none; background:none; cursor:pointer; color:var(--text-dim);
+    font-size:1.1rem; line-height:1; padding:4px;
+  }
+  .drawer-close:hover{color:var(--text);}
+  .drawer-list{display:flex; flex-direction:column; gap:26px;}
+  .drawer-item{
+    display:block; text-decoration:none; color:var(--text);
+  }
+  .drawer-thumb{
+    display:block; width:100%; aspect-ratio:16/9; border-radius:8px;
+    overflow:hidden; background:var(--surface-2); margin-bottom:12px;
+  }
+  .drawer-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .drawer-thumb.placeholder{display:flex; align-items:center; justify-content:center;}
+  .drawer-thumb.placeholder svg{width:32%; height:32%; opacity:.45;}
+  .drawer-item .dtag{font-family:'IBM Plex Mono', monospace; font-size:.66rem; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-2);}
+  .drawer-item.current .dtag{color:var(--accent);}
+  .drawer-item h3{font-size:1.05rem; margin-top:6px;}
+  .drawer-item p{font-size:.84rem; color:var(--text-dim); margin-top:5px; line-height:1.5;}
+  .drawer-item.soon{opacity:.55;}
+  .drawer-item:not(.soon):hover h3{color:var(--accent-2);}
+  .drawer-foot{margin-top:22px; padding-top:16px; border-top:1px solid var(--border); font-size:.78rem; color:var(--text-dim);}
+
+  /* ---------- page layout with sidebar toc ---------- */
+  .page{
+    max-width:1680px; margin:0 auto;
+    display:flex; gap:72px;
+    padding:0 48px;
+  }
+  .toc{
+    width:220px; flex:none;
+    position:sticky; top:50%;
+    transform:translateY(-50%);
+    align-self:flex-start;
+    max-height:calc(100vh - 96px);
+    overflow-y:auto;
+  }
+  .toc-label{
+    font-family:'IBM Plex Mono', monospace; font-size:.68rem;
+    letter-spacing:.1em; text-transform:uppercase; color:var(--text-dim);
+    margin-bottom:14px;
+  }
+  .toc a{
+    display:block; font-size:.9rem; color:var(--text-dim);
+    text-decoration:none; padding:7px 0 7px 13px;
+    border-left:2px solid var(--border);
+    transition:color .15s, border-color .15s;
+  }
+  .toc a:hover{color:var(--text);}
+  .toc a.active{color:var(--accent); border-left-color:var(--accent); font-weight:600;}
+  .main{flex:1; min-width:0;}
+
+  @media (max-width: 1600px) and (min-width: 1101px){
+    .topbar-inner{padding:16px 24px;}
+    .page{padding:0 24px; gap:56px;}
+  }
+
+  @media (max-width: 1100px){
+    .toc{display:none;}
+    .page{padding:0 24px;}
+  }
+
+  /* ---------- centered reading column ---------- */
+  .hero, section, .related{
+    display:grid;
+    grid-template-columns:[full-start] minmax(0,1fr) [text-start] min(720px,100%) [text-end] minmax(0,1fr) [full-end];
+  }
+  .hero > *, section > *, .related > *{grid-column:text;}
+  .hero > .wide, section > .wide, .related > .wide{grid-column:full;}
+
+  /* ---------- hero ---------- */
+  .hero{padding:56px 0 48px;}
+  .eyebrow{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.76rem; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--accent);
+    margin-bottom:20px;
+  }
+  h1{font-size:clamp(2.6rem, 6vw, 4.4rem); letter-spacing:-.015em; line-height:.98;}
+  .hero-sub{
+    margin-top:22px; font-size:clamp(1.15rem, 1.8vw, 1.3rem); color:var(--text-dim);
+    text-wrap:pretty; line-height:1.5;
+  }
+  .meta-row{
+    margin-top:36px;
+    display:grid; grid-template-columns:repeat(5,1fr); gap:0 24px;
+    border-top:1px solid var(--border);
+  }
+  .meta-item{
+    padding:16px 0;
+  }
+  .meta-label{
+    font-family:'IBM Plex Mono', monospace; font-size:.68rem;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim);
+  }
+  .meta-value{margin-top:7px; font-size:.92rem; font-weight:500;}
+
+  /* ---------- sections ---------- */
+  section{padding:52px 0; scroll-margin-top:76px;}
+  section.divider{border-top:1px solid var(--border);}
+  .section-head{margin-bottom:26px;}
+  .section-num{
+    font-family:'IBM Plex Mono', monospace; font-size:.86rem;
+    color:var(--accent); letter-spacing:.08em;
+  }
+  .section-head h2{font-size:clamp(1.9rem, 3.2vw, 2.5rem); margin-top:8px; letter-spacing:-.015em;}
+  .lede{font-family:'Fraunces', serif; font-style:italic; font-weight:500; font-size:1.3rem; line-height:1.5; color:var(--text); margin-top:14px;}
+  .body-text{font-size:1.08rem; color:var(--text-dim); margin-top:16px; line-height:1.65;}
+  .body-text + .body-text{margin-top:14px;}
+  .body-text strong{color:var(--text); font-weight:600;}
+
+  /* ---------- tldr, unboxed editorial statement ---------- */
+  .tldr-block{margin-top:16px;}
+  .tldr-lead{
+    font-family:'Fraunces', serif; font-weight:600; font-size:clamp(1.5rem, 2.6vw, 1.9rem);
+    letter-spacing:-.01em; line-height:1.3; color:var(--text);
+  }
+  .tldr-explain{margin-top:14px; font-size:1.06rem; color:var(--text-dim); line-height:1.6; max-width:640px;}
+  .tldr-items{
+    margin-top:34px;
+    display:flex; flex-wrap:wrap; gap:30px 48px;
+  }
+  .tldr-item{flex:1 1 220px; min-width:200px;}
+  .tldr-num{
+    font-family:'IBM Plex Mono', monospace; font-size:.74rem; color:var(--accent);
+  }
+  .tldr-item h3{font-size:1.15rem; margin-top:9px; font-weight:600; letter-spacing:-.01em;}
+  .tldr-item p{margin-top:8px; font-size:.94rem; color:var(--text-dim); line-height:1.55;}
+  .tldr-tag{
+    font-family:'IBM Plex Mono', monospace; font-size:.7rem; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--accent-2);
+  }
+
+  .note{
+    margin-top:24px;
+    border-left:3px solid var(--accent);
+    padding:2px 0 2px 22px;
+  }
+  .note .tag{
+    font-family:'IBM Plex Mono', monospace; font-size:.68rem;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--accent-2);
+    display:block; margin-bottom:8px;
+  }
+  .note q{quotes:'\201C' '\201D'; font-family:'Fraunces', serif; font-style:italic; font-size:1.15rem; color:var(--text);}
+  .note p{font-size:1rem; color:var(--text-dim); line-height:1.6;}
+  .note p + p{margin-top:8px; font-size:.92rem;}
+
+  /* ---------- subhead: splits a section into per-layout groups ---------- */
+  .subhead{
+    margin-top:44px; padding-top:28px;
+  }
+  .subhead:first-of-type{margin-top:28px;}
+  .subhead .subhead-tag{
+    font-family:'IBM Plex Mono', monospace; font-size:.7rem; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--accent);
+  }
+  .subhead h3{font-size:1.5rem; margin-top:8px;}
+
+  /* ---------- research stats, plain rule row ---------- */
+  .stat-strip{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:28px;
+    border-top:1px solid var(--border);
+    padding-top:20px;
+    margin-top:26px;
+  }
+  .stat-num{
+    font-family:'Fraunces', serif; font-weight:600;
+    font-size:2.1rem; color:var(--accent);
+  }
+  .stat-label{margin-top:6px; font-size:.82rem; color:var(--text-dim); line-height:1.45;}
+
+  /* ---------- gap list (problem), plain rule rows ---------- */
+  .gap-list{margin-top:24px;}
+  .gap-item{margin-top:26px;}
+  .gap-item:first-child{margin-top:0;}
+  .gap-num{font-family:'IBM Plex Mono', monospace; font-size:.74rem; color:var(--accent);}
+  .gap-item p{margin-top:8px; font-size:1.02rem; color:var(--text-dim); line-height:1.6;}
+  .gap-item strong{color:var(--text); font-weight:600;}
+
+  /* ---------- evidence gallery ---------- */
+  .evidence-cap{padding:14px 16px;}
+  .evidence-cap .num{
+    font-family:'IBM Plex Mono', monospace; font-size:.68rem;
+    color:var(--accent); letter-spacing:.06em;
+  }
+  .evidence-cap .num.current{color:var(--accent-2);}
+  .evidence-cap p{margin-top:6px; font-size:.88rem; color:var(--text-dim); line-height:1.55;}
+
+  /* ---------- live feature (own work, full width) ---------- */
+  .live-feature{
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    overflow:hidden; margin-top:20px;
+  }
+  .live-feature img, .live-feature video{
+    display:block; width:100%; height:auto;
+    border-bottom:1px solid var(--border);
+  }
+  .states-grid-3{margin-top:20px;}
+  .states-grid-3.pair{display:grid; grid-template-columns:3.545fr 1fr; gap:20px; align-items:start;}
+  .states-grid-3.pair-even{display:grid; grid-template-columns:1fr 1fr; gap:20px; align-items:start;}
+  .states-grid-3.pair .live-feature,
+  .states-grid-3.pair-even .live-feature{margin-top:0;}
+  .states-grid-3 .live-feature{margin-top:24px; max-width:1290px;}
+  .states-grid-3 .live-feature:first-child{margin-top:0;}
+  .states-grid-3 .live-feature img,
+  .states-grid-3 .live-feature video{height:auto; object-fit:contain;}
+  @media (max-width:900px){
+    .states-grid-3.pair,
+    .states-grid-3.pair-even{grid-template-columns:1fr;}
+  }
+
+  /* ---------- pull quote, section-closing relationship statement ---------- */
+  .pull-quote{
+    margin-top:36px;
+    padding:4px 0 4px 22px;
+    border-left:3px solid var(--accent);
+    font-family:'Fraunces', serif; font-style:italic; font-weight:500;
+    font-size:1.25rem; line-height:1.55; color:var(--text);
+  }
+  .pull-quote strong{font-style:normal; font-weight:600; color:var(--accent-2);}
+
+  /* ---------- flow blocks ---------- */
+  .flow{margin-top:40px;}
+  .flow:first-child{margin-top:24px;}
+  .flow-head{display:flex; align-items:baseline; gap:12px;}
+  .flow-num{
+    font-family:'Fraunces', serif; font-weight:600; font-size:1.3rem; color:var(--accent-2);
+  }
+  .flow-head h3{font-size:1.3rem;}
+  .flow p.body-text{margin-top:12px;}
+  .flow-text{max-width:720px; margin-left:auto; margin-right:auto;}
+
+  /* ---------- feature list, plain divider grid ---------- */
+  .feature-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:30px 40px;
+    margin-top:20px;
+  }
+  .feature{}
+  .feature-num{font-family:'IBM Plex Mono', monospace; font-size:.72rem; color:var(--accent-2);}
+  .feature h3{font-weight:600; font-size:1.02rem; margin-top:8px; font-family:'Archivo', sans-serif;}
+  .feature p{margin-top:7px; font-size:.92rem; color:var(--text-dim); line-height:1.55;}
+
+  /* ---------- impact, plain divider rows ---------- */
+  .impact-grid{margin-top:22px;}
+  .impact-item{margin-top:28px; display:grid; grid-template-columns:1fr 2fr; gap:24px; align-items:baseline;}
+  .impact-item:first-child{margin-top:0;}
+  .impact-item h3{font-size:1.2rem; line-height:1.3;}
+  .impact-item p{font-size:.94rem; color:var(--text-dim); line-height:1.55;}
+
+  /* ---------- learnings, plain divider rows ---------- */
+  .learnings-list{margin-top:18px;}
+  .learning{margin-top:30px; display:flex; gap:18px; align-items:baseline;}
+  .learnings-list .learning:first-child{margin-top:0;}
+  .learning-num{font-family:'Fraunces', serif; font-weight:600; color:var(--accent); font-size:1.5rem; flex:none; width:32px;}
+  .learning h3{font-size:1.12rem;}
+  .learning p{margin-top:6px; font-size:.94rem; color:var(--text-dim); line-height:1.55;}
+
+  /* ---------- related projects ---------- */
+  .related{padding:52px 0 8px; border-top:1px solid var(--border);}
+  .related-label{font-family:'IBM Plex Mono', monospace; font-size:.74rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text-dim); margin-bottom:18px;}
+  .related-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  .related-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    overflow:hidden; text-decoration:none; color:var(--text); display:block;
+    transition:border-color .15s;
+  }
+  .related-card:not(.soon):hover{border-color:var(--accent);}
+  .related-thumb{
+    display:block; width:100%; aspect-ratio:16/9;
+    background:var(--surface-2); border-bottom:1px solid var(--border);
+  }
+  .related-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .related-thumb.placeholder{display:flex; align-items:center; justify-content:center;}
+  .related-thumb.placeholder svg{width:26%; height:26%; opacity:.45;}
+  .related-body{padding:18px 20px;}
+  .related-tag{font-family:'IBM Plex Mono', monospace; font-size:.66rem; letter-spacing:.06em; color:var(--accent); text-transform:uppercase;}
+  .related-card h3{font-size:1.08rem; margin-top:9px;}
+  .related-card p{margin-top:7px; font-size:.86rem; color:var(--text-dim); line-height:1.5;}
+  .related-card.soon{opacity:.6;}
+
+  footer{
+    border-top:1px solid var(--border);
+    padding:34px 0 60px;
+    display:flex; justify-content:space-between; align-items:flex-start;
+    flex-wrap:wrap; gap:24px;
+  }
+  footer .fnote{font-size:.8rem; color:var(--text-dim); line-height:1.55; max-width:52ch;}
+  footer .links{display:flex; align-items:center; gap:20px; flex:none;}
+  footer a.contact{
+    font-family:'IBM Plex Mono', monospace; font-size:.82rem;
+    color:var(--accent); text-decoration:none; border-bottom:1px solid transparent;
+  }
+  footer a.contact:hover{border-bottom-color:var(--accent);}
+  footer a.contact .ext{display:inline-block; margin-left:2px; font-size:.9em;}
+
+  @media (max-width: 720px){
+    .meta-row{grid-template-columns:1fr 1fr;}
+    .meta-item{border-right:none; border-bottom:1px solid var(--border); padding:10px 0;}
+    .feature-grid{grid-template-columns:1fr;}
+    .related-grid{grid-template-columns:1fr;}
+    .impact-item{grid-template-columns:1fr;}
+    .stat-strip{grid-template-columns:1fr 1fr;}
+    .tldr-items{gap:22px 32px;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+
+</style>
+</head>
+<body>
+<div class="drawer-scrim" id="drawerScrim"></div>
+<nav class="drawer" id="drawer" aria-label="Project switcher">
+  <div class="drawer-head">
+    <span class="drawer-label">Projects</span>
+    <button type="button" class="drawer-close" id="drawerClose" aria-label="Close menu">&#10005;</button>
+  </div>
+  <div class="drawer-list">
+    <a class="drawer-item" href="/search-filter/">
+      <div class="drawer-thumb placeholder">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" stroke="var(--text-dim)" stroke-width="1.6"/><line x1="15.3" y1="15.3" x2="21" y2="21" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </div>
+      <span class="dtag">Project 01</span>
+      <h3>Search & filter</h3>
+      <p>Search on the casino homepage used to hard redirect players away from a running game. Replaced with a non destructive modal, plus Filter and Style of Play to narrow the library by intent.</p>
+    </a>
+    <a class="drawer-item" href="/jackpot-layout/">
+      <div class="drawer-thumb placeholder">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="var(--text-dim)" stroke-width="1.6"/><path d="M12 8v4l3 2" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </div>
+      <span class="dtag">Project 02</span>
+      <h3>Jackpot Layout</h3>
+      <p>A jackpot card built for a dozen providers, tested against a competitor pattern before shipping.</p>
+    </a>
+    <a class="drawer-item" href="/providers-layout/">
+      <div class="drawer-thumb placeholder">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="5" cy="12" r="1.6" fill="var(--text-dim)"/><circle cx="12" cy="12" r="1.6" fill="var(--text-dim)"/><circle cx="19" cy="12" r="1.6" fill="var(--text-dim)"/></svg>
+      </div>
+      <span class="dtag">Project 03</span>
+      <h3>Providers Layout</h3>
+      <p>A weekly "Provider of the Week" carousel, reusing the rotation pattern carried over from the Jackpot card study.</p>
+    </a>
+    <a class="drawer-item current" href="#">
+      <div class="drawer-thumb"><img src="media/hotcold-thumb.jpg" alt=""></div>
+      <span class="dtag">Project 04 &middot; Current</span>
+      <h3>Various Lobby Layout Entry Point</h3>
+      <p>Four smaller lobby layouts, one page: hot and cold, top winners, best-of, and video.</p>
+    </a>
+  </div>
+  <div class="drawer-foot">More projects will be added here as they're built.</div>
+</nav>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="/"><b>Jay Imtyas</b> &middot; Lead Product Designer</a>
+    <div class="topbar-right-group">
+      <nav class="topnav">
+        <a href="/">Work</a>
+        <a href="/about/">About</a>
+        <a href="mailto:outlandishvision@yahoo.com">Contact</a>
+      </nav>
+      <span class="topbar-right">04 / LOBBY LAYOUTS</span>
+      <button type="button" class="hamburger" id="hamburgerBtn" aria-haspopup="true" aria-expanded="false" aria-controls="drawer" aria-label="Open project menu">
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <line class="l1" x1="1" y1="4" x2="15" y2="4"></line>
+          <line class="l2" x1="1" y1="8" x2="15" y2="8"></line>
+          <line class="l3" x1="1" y1="12" x2="15" y2="12"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <nav class="toc" aria-label="Section navigation">
+    <div class="toc-label">On this page</div>
+    <a href="#intro">Introduction</a>
+    <a href="#tldr">TL;DR</a>
+    <a href="#preview">Preview</a>
+    <a href="#research">User research</a>
+    <a href="#problem">Problem</a>
+    <a href="#flows">Core mechanics</a>
+  </nav>
+
+  <main class="main">
+
+    <div class="hero">
+      <span class="eyebrow">Project 04 &middot; Novibet Casino Platform</span>
+      <h1>Various Lobby Layout Entry Point</h1>
+      <p class="hero-sub">Four small lobby layouts, each earning a permanent spot in Novibet's casino lobby but not enough on its own for a full case study: hot and cold, top winners, best-of, and a dedicated video format.</p>
+
+      <div class="meta-row wide">
+        <div class="meta-item">
+          <div class="meta-label">Role</div>
+          <div class="meta-value">Lead Product Designer</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Surface</div>
+          <div class="meta-value">Casino lobby</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Platform</div>
+          <div class="meta-value">Web app, iOS, Android</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Method</div>
+          <div class="meta-value">Design judgment + product specs, no formal user research</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Status</div>
+          <div class="meta-value">4 layouts documented</div>
+        </div>
+      </div>
+    </div>
+
+    <section id="intro">
+      <div class="section-head">
+        <span class="section-num">01 &middot; Introduction</span>
+        <h2>Four small layouts, each doing one real job</h2>
+      </div>
+      <p class="body-text">Novibet's casino lobby regularly gets new modules that surface a slice of the game library some specific way: by real-time performance, by category, by format. Each one is real production work with its own data logic and responsive behaviour, but on its own it's too narrow to justify a full case study.</p>
+      <p class="body-text">This page collects four of them in one place instead. Each gets the same treatment: anatomy, mechanics, and whatever grounded the decision.</p>
+    </section>
+
+    <section id="tldr" class="divider">
+      <div class="section-head">
+        <span class="section-num">02 &middot; TL;DR</span>
+        <h2>The short version</h2>
+      </div>
+      <div class="tldr-block">
+        <p class="tldr-lead">Four lobby modules, each surfacing a different slice of the game library.</p>
+        <p class="tldr-explain">Shipped as configuration rather than one-off screens, populated from live data or a fixed content rule rather than hand-picked per week.</p>
+        <div class="tldr-items">
+          <div class="tldr-item">
+            <span class="tldr-num mono">01</span>
+            <h3>Hot and cold</h3>
+            <p>Two panels, games sorted by real-time RTP: paying out above expected (Hot) or below it (Cold).</p>
+          </div>
+          <div class="tldr-item">
+            <span class="tldr-num mono">02</span>
+            <h3>Top winners</h3>
+            <p>A hero win plus a row of recent big wins, each one replayable as real footage of the actual winning spin.</p>
+          </div>
+          <div class="tldr-item">
+            <span class="tldr-num mono">04</span>
+            <h3>Best-of layout</h3>
+            <p>A horizontal row of thematic category cards (Jackpots, Book Slots, Classic and similar), each opening to that category's games. Compact and standard card sizes.</p>
+          </div>
+          <div class="tldr-item">
+            <span class="tldr-num mono">05</span>
+            <h3>Video layout</h3>
+            <p>A full-width video reel cycling through a category's top games, synced to a game list and a static art panel next to it.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="preview" class="divider">
+      <div class="section-head">
+        <span class="section-num">03 &middot; Preview</span>
+        <h2>What's live today</h2>
+      </div>
+      <p class="lede">Four layouts, documented below.</p>
+
+      <div class="subhead" style="margin-top:0; padding-top:0;">
+        <span class="subhead-tag">Layout 01</span>
+        <h3>Hot and cold</h3>
+      </div>
+
+      <div class="states-grid-3 wide">
+        <div class="live-feature">
+          <video autoplay muted loop playsinline poster="media/hotcold-fullhd-poster.jpg">
+            <source src="media/hotcold-fullhd.mp4" type="video/mp4">
+          </video>
+          <div class="evidence-cap">
+            <span class="num mono current">CURRENT &middot; LIVE, FULL HD</span>
+            <p>Hot and Cold shown side by side at full width, no toggle needed. Games and RTP values refresh in place.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="states-grid-3 pair wide">
+        <div class="live-feature">
+          <video autoplay muted loop playsinline poster="media/hotcold-1600below-poster.jpg">
+            <source src="media/hotcold-1600below.mp4" type="video/mp4">
+          </video>
+          <div class="evidence-cap">
+            <span class="num mono current">1600PX AND BELOW</span>
+            <p>One panel at a time, toggle between Hot and Cold. Games list as a row.</p>
+          </div>
+        </div>
+        <div class="live-feature">
+          <video autoplay muted loop playsinline poster="media/hotcold-mobile-poster.jpg">
+            <source src="media/hotcold-mobile.mp4" type="video/mp4">
+          </video>
+          <div class="evidence-cap">
+            <span class="num mono current">MOBILE</span>
+            <p>Compact icon grid.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="note">
+        <span class="tag">From the spec</span>
+        <p>Games are sorted automatically by real RTP, Hot shows the highest, Cold the lowest, up to 4 games per category depending on device. The spec calls for the list to refresh every 30 minutes; the live info tooltip currently states 60 minutes. Worth confirming with Jay which is correct.</p>
+      </div>
+
+      <div class="subhead">
+        <span class="subhead-tag">Layout 02</span>
+        <h3>Top winners</h3>
+      </div>
+
+      <div class="states-grid-3 wide">
+        <div class="live-feature">
+          <video autoplay muted loop playsinline poster="media/topwinners-fullhd-poster.jpg">
+            <source src="media/topwinners-fullhd.mp4" type="video/mp4">
+          </video>
+          <div class="evidence-cap">
+            <span class="num mono current">CURRENT &middot; LIVE, FULL HD</span>
+            <p>Hovering a card's filmstrip icon rolls it into an animated state, clicking opens the Replay win modal: a short provider-branded loading transition, then the actual recorded footage of that winning spin.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="note">
+        <span class="tag">From the spec</span>
+        <p>Large Win Layout: a "largest wins" mechanism, separate categories for RNG and Live casino, both auto-updating in real or near-real time. RNG and Live both default to a 500 EUR win threshold, configurable. A later phase allows filtering further by bet multiplier (e.g. wins of 500 EUR+ at x20). Required elements: category icon and name, game element, masked username (e.g. st***81), winning amount, game name, provider name. The biggest win can run larger or sit in its own section, which is how the shipped hero card reads.</p>
+      </div>
+
+      <div class="subhead">
+        <span class="subhead-tag">Layout 04</span>
+        <h3>Best-of layout</h3>
+      </div>
+
+      <div class="states-grid-3 wide">
+        <div class="live-feature">
+          <video autoplay muted loop playsinline poster="media/bestof-standard-poster.jpg">
+            <source src="media/bestof-standard.mp4" type="video/mp4">
+          </video>
+          <div class="evidence-cap">
+            <span class="num mono current">STANDARD &middot; LIVE</span>
+            <p>Larger cards, art stacked above the name, game count as a pill at the bottom. Hovering a card highlights it and reveals a chevron next to the count.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="states-grid-3 wide">
+        <div class="live-feature">
+          <video autoplay muted loop playsinline poster="media/bestof-compact-poster.jpg">
+            <source src="media/bestof-compact.mp4" type="video/mp4">
+          </video>
+          <div class="evidence-cap">
+            <span class="num mono current">COMPACT &middot; LIVE</span>
+            <p>Shorter cards, art sitting beside the name and count instead of above it. Same horizontal scroll, more cards fit before scrolling is needed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="note">
+        <span class="tag">From the spec</span>
+        <p>Collections / Best of Layout: thematic category cards (by game type or feature, e.g. Book games, Egyptian, NoviPet, high volatility, Bonus Buy), shown in a row as a horizontal side scroll. An agent manages which categories appear. Category name and art must be visible, clicking a category opens a new window with that category's games. Two card sizes shipped, standard and compact, both matching what was asked for.</p>
+      </div>
+
+      <div class="subhead">
+        <span class="subhead-tag">Layout 05</span>
+        <h3>Video layout</h3>
+      </div>
+
+      <div class="states-grid-3 wide">
+        <div class="live-feature">
+          <video autoplay muted loop playsinline poster="media/videolayout-fullhd-poster.jpg">
+            <source src="media/videolayout-fullhd.mp4" type="video/mp4">
+          </video>
+          <div class="evidence-cap">
+            <span class="num mono current">CURRENT &middot; LIVE, FULL HD</span>
+            <p>"Top Games in 30&Prime;" row on the Casino and Live Casino category pages: a looping video of real gameplay footage, a synced list of up to 4 games, and a synced static art panel.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="note">
+        <span class="tag">From the spec</span>
+        <p>Casino Video Layout, promotional use on Casino and Live Casino category pages: a video playing footage based on the category (provider, game type), a list of games from that category with one openable, a static image tied to the category, and an "All" button opening the full category. What's live matches this, one video reel plus a 4-game list plus a static art panel, all in sync.</p>
+      </div>
+    </section>
+
+    <section id="research" class="divider">
+      <div class="section-head">
+        <span class="section-num">04 &middot; User research</span>
+        <h2>No formal study, grounded in the spec and reused patterns</h2>
+      </div>
+      <p class="lede">No user research was run for any of the four layouts on this page.</p>
+      <p class="body-text">Each layout's decisions are grounded in whatever actually informed them instead: a written spec, a pattern already established elsewhere in the lobby (the hero-card anatomy this page's layouts share with the Jackpot and Providers cards), or a design judgment call. Hot and cold, documented below, came from a written spec plus that shared hero-card convention, not a new pattern invented for it.</p>
+      <div class="note">
+        <span class="tag">If there were more time</span>
+        <p>Worth validating: whether the Hot/Cold framing itself changes what players click, versus just being a different sort order on the same games.</p>
+      </div>
+    </section>
+
+    <section id="problem" class="divider">
+      <div class="section-head">
+        <span class="section-num">05 &middot; Problem</span>
+        <h2>What each layout is standing in for</h2>
+      </div>
+      <p class="body-text">Each of the four had a gap it was built to close.</p>
+
+      <div class="subhead" style="margin-top:28px; padding-top:0;">
+        <span class="subhead-tag">Layout 01</span>
+        <h3>Hot and cold</h3>
+      </div>
+      <div class="gap-list">
+        <div class="gap-item">
+          <span class="gap-num mono">GAP 01</span>
+          <p><strong>No layout surfaced games by real-time performance.</strong> Just categories and curated rows, nothing showing which games were paying out now versus which hadn't in a while.</p>
+        </div>
+        <div class="gap-item">
+          <span class="gap-num mono">GAP 02</span>
+          <p><strong>Two different reasons to try a game, one layout to carry both.</strong> Hot chases a paying streak, Cold bets a quiet game is "due." Both needed to read as equally legitimate.</p>
+        </div>
+      </div>
+
+      <div class="subhead">
+        <span class="subhead-tag">Layout 02</span>
+        <h3>Top winners</h3>
+      </div>
+      <div class="gap-list">
+        <div class="gap-item">
+          <span class="gap-num mono">GAP 01</span>
+          <p><strong>A win claim on its own isn't proof.</strong> A euro amount alone is easy to scroll past and doubt, nothing tied it to a real, watchable moment.</p>
+        </div>
+        <div class="gap-item">
+          <span class="gap-num mono">GAP 02</span>
+          <p><strong>RNG and Live casino needed separate categories.</strong> The two run on different result cadences, so the spec has them populate and threshold independently instead of sharing one feed.</p>
+        </div>
+        <div class="gap-item">
+          <span class="gap-num mono">GAP 03</span>
+          <p><strong>Seeing a win should lead somewhere.</strong> Once convinced, the next step (try the game, tell someone) shouldn't require leaving the lobby to find it.</p>
+        </div>
+      </div>
+
+      <div class="subhead">
+        <span class="subhead-tag">Layout 04</span>
+        <h3>Best-of layout</h3>
+      </div>
+      <div class="gap-list">
+        <div class="gap-item">
+          <span class="gap-num mono">GAP 01</span>
+          <p><strong>Thematic promotion had no dedicated row.</strong> Grouping by feature or theme (book games, Egyptian, high volatility, bonus buy) needed its own place, separate from the standard category rows.</p>
+        </div>
+        <div class="gap-item">
+          <span class="gap-num mono">GAP 02</span>
+          <p><strong>What gets promoted changes often, the layout shouldn't need a rebuild each time.</strong> An agent manages which categories appear, so the row can be repointed at whatever needs promoting without new design or dev work.</p>
+        </div>
+      </div>
+
+      <div class="subhead">
+        <span class="subhead-tag">Layout 05</span>
+        <h3>Video layout</h3>
+      </div>
+      <div class="gap-list">
+        <div class="gap-item">
+          <span class="gap-num mono">GAP 01</span>
+          <p><strong>A category row of static tiles doesn't sell why a game is worth trying.</strong> Icons and names show what's in a category, not what playing it looks like.</p>
+        </div>
+        <div class="gap-item">
+          <span class="gap-num mono">GAP 02</span>
+          <p><strong>Promotion needed a format built around real footage, not stills.</strong> A heavier, video-led format for the Casino and Live Casino category pages specifically, which the regular category rows don't have.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="flows" class="divider">
+      <div class="section-head">
+        <span class="section-num">06 &middot; Core mechanics</span>
+        <h2>Anatomy and data logic, one layout at a time</h2>
+      </div>
+
+      <div class="subhead" style="margin-top:0; padding-top:0;">
+        <span class="subhead-tag">Layout 01</span>
+        <h3>Hot and cold</h3>
+      </div>
+      <p class="lede">Same anatomy, opposite framing. Hot runs a fire theme, Cold runs an ice theme, both built from the same component.</p>
+
+      <div class="flow wide">
+        <div class="flow-text">
+          <div class="flow-head">
+            <span class="flow-num mono">01</span>
+            <h3>One card, two themes</h3>
+          </div>
+          <p class="body-text">Each panel shares the same pieces: background image, foreground character, stylised title ("Blazing Favorites" for Hot, "Chill Zone" for Cold), subtitle, info button, "See all" link, and up to 4 games with name, provider, and RTP. Only the theme, copy, and RTP direction change.</p>
+        </div>
+      </div>
+
+      <div class="flow wide">
+        <div class="flow-text">
+          <div class="flow-head">
+            <span class="flow-num mono">02</span>
+            <h3>Populated from live RTP, not picked by hand</h3>
+          </div>
+          <p class="body-text">Hot pulls the highest-RTP games, Cold the lowest, from real RTP figures, not a curated list. Refreshes automatically (30 minutes per the spec, 60 per the live tooltip, see the note in Preview) and shows up to 4 games per category, fewer on narrower devices.</p>
+        </div>
+      </div>
+
+      <div class="flow wide">
+        <div class="flow-text">
+          <div class="flow-head">
+            <span class="flow-num mono">03</span>
+            <h3>Responsive: two panels collapse to one plus a toggle</h3>
+          </div>
+          <p class="body-text">At full HD, Hot and Cold sit side by side, each with its own 4-game list. Below that it collapses to one panel with a Hot Picks / Cold Picks toggle to switch. The game list also changes shape: a horizontal row on tablet-width screens, a compact icon grid with the RTP badge under each thumbnail on mobile.</p>
+        </div>
+      </div>
+
+      <div class="flow wide">
+        <div class="flow-text">
+          <div class="flow-head">
+            <span class="flow-num mono">04</span>
+            <h3>The info tooltip explains both, highlighted by where you opened it</h3>
+          </div>
+          <p class="body-text">Tapping the info icon opens a tooltip explaining both Hot and Cold, every time regardless of which panel is active. It's contextual though: open it from Hot Picks and that box gets an orange border, open it from Cool Picks and that box gets the highlight instead.</p>
+        </div>
+        <div class="states-grid-3 pair-even">
+          <div class="live-feature">
+            <img src="media/hotcold-info-hot.jpg" alt="Info tooltip opened from the Hot Picks panel: What are Hot and Cold Slots, with the Hot Picks box outlined in orange and Cool Picks plain.">
+            <div class="evidence-cap">
+              <span class="num mono current">CURRENT &middot; LIVE, OPENED FROM HOT PICKS</span>
+              <p>"Hot games have been paying out above their expected RTP recently." Hot Picks box outlined, Cool Picks plain.</p>
+            </div>
+          </div>
+          <div class="live-feature">
+            <img src="media/hotcold-info-cold.jpg" alt="Info tooltip opened from the Cool Picks panel: What are Hot and Cold Slots, with the Cool Picks box outlined in blue and Hot Picks plain.">
+            <div class="evidence-cap">
+              <span class="num mono current">CURRENT &middot; LIVE, OPENED FROM COOL PICKS</span>
+              <p>"Cold games haven't paid out much and are tracking below their RTP." Cool Picks box outlined this time, Hot Picks plain.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subhead">
+        <span class="subhead-tag">Layout 02</span>
+        <h3>Top winners</h3>
+      </div>
+      <p class="lede">One row, real evidence. Every card links to actual recorded footage of that win, not a generic animation.</p>
+
+      <div class="flow wide">
+        <div class="flow-text">
+          <div class="flow-head">
+            <span class="flow-num mono">01</span>
+            <h3>One hero win, a row of smaller ones</h3>
+          </div>
+          <p class="body-text">A hero card (the single biggest win) leads a scrolling strip of smaller win cards. Every card shares the same anatomy: game art, masked username ("Gia*****"), win amount, game name, provider, and a filmstrip icon marking real replay footage.</p>
+        </div>
+        <div class="states-grid-3">
+          <div class="live-feature">
+            <img src="media/topwinners-anatomy.jpg" alt="Top Winners row: a hero win card for Age of Seth at 100,000 euros, followed by smaller win cards for Sugar Rush and Mighty Symbols Sevens, each showing a masked username, win amount, game name, provider, and a filmstrip icon.">
+            <div class="evidence-cap">
+              <span class="num mono current">CURRENT &middot; LIVE</span>
+              <p>Hero card plus the scrolling row. Masked username, win amount, game name and provider repeat on every card.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow wide">
+        <div class="flow-text">
+          <div class="flow-head">
+            <span class="flow-num mono">02</span>
+            <h3>The filmstrip icon signals real footage</h3>
+          </div>
+          <p class="body-text">Static by default, the filmstrip icon rolls into a film loop on hover, the cue that real footage backs this card, not just a number.</p>
+        </div>
+      </div>
+
+      <div class="flow wide">
+        <div class="flow-text">
+          <div class="flow-head">
+            <span class="flow-num mono">03</span>
+            <h3>Share from the modal, Play now redirects out</h3>
+          </div>
+          <p class="body-text">Clicking a card opens the Replay win modal on the real recorded footage of that spin. Its footer repeats the win details, plus share icons (Facebook, WhatsApp, Telegram, X), a copy-link button, and a "Play now" button, which redirects out to the game rather than playing inside the modal.</p>
+        </div>
+      </div>
+
+      <div class="note">
+        <span class="tag">Not yet reflected on the page</span>
+        <p>The second phase (filtering by bet multiplier, e.g. 500 EUR+ at x20) and the separate RNG/Live categories aren't visible in this capture. Worth confirming before claiming either as shipped.</p>
+      </div>
+
+      <div class="subhead">
+        <span class="subhead-tag">Layout 04</span>
+        <h3>Best-of layout</h3>
+      </div>
+      <p class="lede">One card component, two sizes. Same anatomy, different amount of room for the artwork.</p>
+
+      <div class="flow wide">
+        <div class="flow-text">
+          <div class="flow-head">
+            <span class="flow-num mono">01</span>
+            <h3>A row of thematic category cards</h3>
+          </div>
+          <p class="body-text">A "Best Of Layout" header (total-games count badge) sits above a scrolling row of category cards, each with art, a name, and a game-count pill (Jackpots, Big Catch, Novibet Originals, Week's Provider, Book Slots, Card Games, Classic in this capture).</p>
+        </div>
+        <div class="states-grid-3">
+          <div class="live-feature">
+            <img src="media/bestof-anatomy.jpg" alt="Best Of Layout row: seven category cards (Jackpots, Big Catch, Novibet Originals, Week's Provider, Book Slots, Card Games, Classic), each with art, a name, and a game-count pill. Book Slots is hovered, showing a highlighted glow and a chevron next to its count.">
+            <div class="evidence-cap">
+              <span class="num mono current">CURRENT &middot; LIVE</span>
+              <p>Standard size, 7 cards visible. Hovering Book Slots highlights the card and reveals a chevron next to the count.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow wide">
+        <div class="flow-text">
+          <div class="flow-head">
+            <span class="flow-num mono">02</span>
+            <h3>Hover signals it opens, clicking goes to the category</h3>
+          </div>
+          <p class="body-text">By default a card shows art, name, and count. On hover it lifts with a themed glow and a chevron appears next to the count, the cue that clicking opens that category's full game list in a new window.</p>
+        </div>
+      </div>
+
+      <div class="flow wide">
+        <div class="flow-text">
+          <div class="flow-head">
+            <span class="flow-num mono">03</span>
+            <h3>Two sizes: standard and compact</h3>
+          </div>
+          <p class="body-text">Standard stacks the art above the name and count, for a bigger piece of artwork. Compact sets the art beside them instead, a shorter card that fits more of the row before scrolling. Same component and hover behaviour, just less room for art.</p>
+        </div>
+      </div>
+
+      <div class="flow wide">
+        <div class="flow-text">
+          <div class="flow-head">
+            <span class="flow-num mono">04</span>
+            <h3>Content is agent-managed, not hard-coded</h3>
+          </div>
+          <p class="body-text">Per the spec, which categories appear and in what order is set by an agent rather than shipped as a fixed list, so the row can be repointed at whatever Novibet needs to promote without a new build.</p>
+        </div>
+      </div>
+
+      <div class="note">
+        <span class="tag">Not independently confirmed</span>
+        <p>The two captures show different game counts for the same categories (Jackpots: 24 vs 20, for example) and different row totals (301 vs 351). Likely two separate demo data sets, not confirmed with Jay.</p>
+      </div>
+
+      <div class="subhead">
+        <span class="subhead-tag">Layout 05</span>
+        <h3>Video layout</h3>
+      </div>
+      <p class="lede">One row, three synced parts: what's playing, what else is in the category, and the game it's currently on.</p>
+
+      <div class="flow wide">
+        <div class="flow-text">
+          <div class="flow-head">
+            <span class="flow-num mono">01</span>
+            <h3>Three parts, one row</h3>
+          </div>
+          <p class="body-text">A "Top Games in 30&Prime;" header (count badge, "All" link) sits above one row: video on the left, up to 4 games from the category in the middle, and a static branded art panel on the right.</p>
+        </div>
+        <div class="states-grid-3">
+          <div class="live-feature">
+            <img src="media/videolayout-anatomy.jpg" alt="Top Games in 30 seconds row: a video of Duck Hunters 2 gameplay on the left, a list of four games (Coin Strike XXL Multicoin, Duck Hunters 2 highlighted, Dragons of Arcane Wild II, Pirots 4) in the middle, and a static Duck Hunters 2 art panel on the right.">
+            <div class="evidence-cap">
+              <span class="num mono current">CURRENT &middot; LIVE</span>
+              <p>Duck Hunters 2 playing and highlighted in the list at the same time, with its art on the right. All three stay in sync.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow wide">
+        <div class="flow-text">
+          <div class="flow-head">
+            <span class="flow-num mono">02</span>
+            <h3>Real footage, one game at a time</h3>
+          </div>
+          <p class="body-text">The video cycles through real captured gameplay per game, not one looping clip: reel spins for Coin Strike XXL Multicoin, then a Duck Hunters 2 bonus round climbing from 25 to 500, then the next game. Controls: mute toggle, skip-to-next, fast-forward.</p>
+        </div>
+      </div>
+
+      <div class="flow wide">
+        <div class="flow-text">
+          <div class="flow-head">
+            <span class="flow-num mono">03</span>
+            <h3>List and art panel track the video, not picked independently</h3>
+          </div>
+          <p class="body-text">Whichever game is playing is the one highlighted in the list (checkmark plus outline) and shown in the art panel. All three change together as the video advances.</p>
+        </div>
+      </div>
+
+      <div class="note">
+        <span class="tag">Open question</span>
+        <p>The spec asks for a game in the list to be "able to open." Whether clicking one actually jumps the video, or the list just displays what's playing, isn't confirmed from this capture.</p>
+      </div>
+    </section>
+
+
+    <div class="related">
+      <div class="related-label">More projects</div>
+      <div class="related-grid wide">
+        <a class="related-card" href="/search-filter/">
+          <div class="related-thumb placeholder">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" stroke="var(--text-dim)" stroke-width="1.6"/><line x1="15.3" y1="15.3" x2="21" y2="21" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </div>
+          <div class="related-body">
+            <span class="related-tag">Project 01</span>
+            <h3>Search & filter</h3>
+            <p>Search on the casino homepage used to hard redirect players away from a running game. Replaced with a non destructive modal, plus Filter and Style of Play to narrow the library by intent.</p>
+          </div>
+        </a>
+        <a class="related-card" href="/jackpot-layout/">
+          <div class="related-thumb placeholder">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="var(--text-dim)" stroke-width="1.6"/><path d="M12 8v4l3 2" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </div>
+          <div class="related-body">
+            <span class="related-tag">Project 02</span>
+            <h3>Jackpot Layout</h3>
+            <p>A jackpot card built for a dozen providers, tested against a competitor pattern before shipping.</p>
+          </div>
+        </a>
+        <a class="related-card" href="/providers-layout/">
+          <div class="related-thumb placeholder">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="5" cy="12" r="1.6" fill="var(--text-dim)"/><circle cx="12" cy="12" r="1.6" fill="var(--text-dim)"/><circle cx="19" cy="12" r="1.6" fill="var(--text-dim)"/></svg>
+          </div>
+          <div class="related-body">
+            <span class="related-tag">Project 03</span>
+            <h3>Providers Layout</h3>
+            <p>A weekly "Provider of the Week" carousel, reusing the rotation pattern carried over from the Jackpot card study.</p>
+          </div>
+        </a>
+      </div>
+      </div>
+
+    <footer>
+      <p class="fnote">&copy; The designs featured in my portfolio belong to the collaborating companies, each retaining its respective ownership. Any expressed opinions or viewpoints are solely my own and do not represent those of any company.</p>
+      <div class="links">
+        <a class="contact" href="mailto:outlandishvision@yahoo.com">Reach out</a>
+        <a class="contact" href="https://www.linkedin.com/in/jay-imtyas/" target="_blank" rel="noopener">LinkedIn</a>
+        <a class="contact" href="https://outlandishvision.framer.website/" target="_blank" rel="noopener" aria-label="Older portfolio (opens in a new tab)">Older portfolio<span class="ext" aria-hidden="true">&#8599;</span></a>
+      </div>
+    </footer>
+
+  </main>
+</div>
+
+<script>
+(function(){
+  // table of contents scrollspy
+  var tocLinks = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
+  var sections = tocLinks.map(function(a){ return document.getElementById(a.getAttribute('href').slice(1)); }).filter(Boolean);
+  if('IntersectionObserver' in window && sections.length){
+    var observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        var link = document.querySelector('.toc a[href="#' + entry.target.id + '"]');
+        if(!link) return;
+        if(entry.isIntersecting){
+          tocLinks.forEach(function(l){ l.classList.remove('active'); });
+          link.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    sections.forEach(function(s){ observer.observe(s); });
+  }
+
+  // project switcher drawer
+  var btn = document.getElementById('hamburgerBtn');
+  var drawer = document.getElementById('drawer');
+  var scrim = document.getElementById('drawerScrim');
+  var closeBtn = document.getElementById('drawerClose');
+
+  function openDrawer(){
+    drawer.classList.add('is-open');
+    scrim.classList.add('is-open');
+    btn.setAttribute('aria-expanded', 'true');
+  }
+  function closeDrawer(){
+    drawer.classList.remove('is-open');
+    scrim.classList.remove('is-open');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.focus();
+  }
+  btn.addEventListener('click', function(){
+    if(drawer.classList.contains('is-open')) closeDrawer(); else openDrawer();
+  });
+  closeBtn.addEventListener('click', closeDrawer);
+  scrim.addEventListener('click', closeDrawer);
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && drawer.classList.contains('is-open')) closeDrawer();
+  });
+})();
+</script>
+</body>
+</html>

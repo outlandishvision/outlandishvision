@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Search &amp; filter</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,500..600&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg: #FAF6EE;
+    --surface: #FFFFFF;
+    --surface-2: #F2E9D6;
+    --text: #1B160F;
+    --text-dim: #6E6455;
+    --border: #E4D8BE;
+    --accent: #A9711A;
+    --accent-2: #7A5313;
+    --accent-ink: #FFFFFF;
+    --shadow: 0 1px 2px rgba(27,22,15,.04), 0 8px 24px rgba(27,22,15,.06);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #14110C;
+      --surface: #1D1912;
+      --surface-2: #262019;
+      --text: #F3ECDD;
+      --text-dim: #AA9F89;
+      --border: #362F20;
+      --accent: #E7A93E;
+      --accent-2: #C98F2E;
+      --accent-ink: #1B160F;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.45);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #14110C;
+    --surface: #1D1912;
+    --surface-2: #262019;
+    --text: #F3ECDD;
+    --text-dim: #AA9F89;
+    --border: #362F20;
+    --accent: #E7A93E;
+    --accent-2: #C98F2E;
+    --accent-ink: #1B160F;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.45);
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box;}
+  html{font-size:113%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Archivo', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.65;
+  }
+  h1,h2,h3{
+    font-family:'Fraunces', Georgia, serif;
+    font-weight:600;
+    text-wrap:balance;
+    margin:0;
+    color:var(--text);
+    font-variation-settings:"SOFT" 20;
+  }
+  .mono{
+    font-family:'IBM Plex Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  a{color:inherit;}
+  p{margin:0;}
+  ul{margin:0; padding:0; list-style:none;}
+  img,video{max-width:100%;}
+
+  /* ---------- top bar / site nav ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    background:color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom:1px solid var(--border);
+  }
+  .topbar-inner{
+    max-width:1680px; margin:0 auto; padding:16px 48px;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px;
+  }
+  .brand{font-size:.82rem; letter-spacing:.02em; color:var(--text-dim); text-decoration:none;}
+  .brand b{color:var(--text); font-weight:600;}
+  .topnav{display:flex; align-items:center; gap:22px;}
+  .topnav a{
+    font-family:'IBM Plex Mono', monospace; font-size:.74rem; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--text-dim); text-decoration:none;
+  }
+  .topnav a:hover{color:var(--accent);}
+  .topbar-right-group{display:flex; align-items:center; gap:22px;}
+  .topbar-right{color:var(--text-dim); font-family:'IBM Plex Mono', monospace; font-size:.74rem; letter-spacing:.04em;}
+  .hamburger{
+    appearance:none; border:none; background:none;
+    border-radius:6px; width:38px; height:38px; flex:none;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    padding:0;
+  }
+  .hamburger:hover{background:var(--surface-2);}
+  .hamburger:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .hamburger svg{display:block; width:16px; height:16px;}
+  .hamburger svg line{stroke:var(--text); stroke-width:1.6; transition:transform .18s ease, opacity .18s ease;}
+  .hamburger[aria-expanded="true"] .l1{transform:translateY(5.5px) rotate(45deg);}
+  .hamburger[aria-expanded="true"] .l2{opacity:0;}
+  .hamburger[aria-expanded="true"] .l3{transform:translateY(-5.5px) rotate(-45deg);}
+
+  /* project switcher drawer */
+  .drawer-scrim{
+    position:fixed; inset:0; background:rgba(20,17,12,.4);
+    opacity:0; visibility:hidden; transition:opacity .2s ease, visibility .2s;
+    z-index:55;
+  }
+  .drawer-scrim.is-open{opacity:1; visibility:visible;}
+  .drawer{
+    position:fixed; top:0; right:0; height:100%; width:min(400px, 88vw);
+    background:var(--surface); border-left:1px solid var(--border);
+    z-index:56; padding:22px 26px 26px;
+    transform:translateX(100%); transition:transform .22s ease;
+    overflow-y:auto;
+  }
+  .drawer.is-open{transform:translateX(0);}
+  .drawer-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:26px;}
+  .drawer-label{font-family:'IBM Plex Mono', monospace; font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text-dim);}
+  .drawer-close{
+    appearance:none; border:none; background:none; cursor:pointer; color:var(--text-dim);
+    font-size:1.1rem; line-height:1; padding:4px;
+  }
+  .drawer-close:hover{color:var(--text);}
+  .drawer-list{display:flex; flex-direction:column; gap:26px;}
+  .drawer-item{
+    display:block; text-decoration:none; color:var(--text);
+  }
+  .drawer-thumb{
+    display:block; width:100%; aspect-ratio:16/9; border-radius:8px;
+    overflow:hidden; background:var(--surface-2); margin-bottom:12px;
+  }
+  .drawer-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .drawer-thumb.placeholder{display:flex; align-items:center; justify-content:center;}
+  .drawer-thumb.placeholder svg{width:32%; height:32%; opacity:.45;}
+  .drawer-item .dtag{font-family:'IBM Plex Mono', monospace; font-size:.66rem; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-2);}
+  .drawer-item.current .dtag{color:var(--accent);}
+  .drawer-item h3{font-size:1.05rem; margin-top:6px;}
+  .drawer-item p{font-size:.84rem; color:var(--text-dim); margin-top:5px; line-height:1.5;}
+  .drawer-item.soon{opacity:.55;}
+  .drawer-item:not(.soon):hover h3{color:var(--accent-2);}
+  .drawer-foot{margin-top:22px; padding-top:16px; border-top:1px solid var(--border); font-size:.78rem; color:var(--text-dim);}
+
+  /* ---------- page layout with sidebar toc ---------- */
+  .page{
+    max-width:1680px; margin:0 auto;
+    display:flex; gap:72px;
+    padding:0 48px;
+  }
+  .toc{
+    width:220px; flex:none;
+    position:sticky; top:50%;
+    transform:translateY(-50%);
+    align-self:flex-start;
+    max-height:calc(100vh - 96px);
+    overflow-y:auto;
+  }
+  .toc-label{
+    font-family:'IBM Plex Mono', monospace; font-size:.68rem;
+    letter-spacing:.1em; text-transform:uppercase; color:var(--text-dim);
+    margin-bottom:14px;
+  }
+  .toc a{
+    display:block; font-size:.9rem; color:var(--text-dim);
+    text-decoration:none; padding:7px 0 7px 13px;
+    border-left:2px solid var(--border);
+    transition:color .15s, border-color .15s;
+  }
+  .toc a:hover{color:var(--text);}
+  .toc a.active{color:var(--accent); border-left-color:var(--accent); font-weight:600;}
+  .main{flex:1; min-width:0;}
+
+  @media (max-width: 1600px) and (min-width: 1101px){
+    .topbar-inner{padding:16px 24px;}
+    .page{padding:0 24px; gap:56px;}
+  }
+
+  @media (max-width: 1100px){
+    .toc{display:none;}
+    .page{padding:0 24px;}
+  }
+
+  /* ---------- centered reading column ---------- */
+  .hero, section, .related{
+    display:grid;
+    grid-template-columns:[full-start] minmax(0,1fr) [text-start] min(720px,100%) [text-end] minmax(0,1fr) [full-end];
+  }
+  .hero > *, section > *, .related > *{grid-column:text;}
+  .hero > .wide, section > .wide, .related > .wide{grid-column:full;}
+
+  /* ---------- hero ---------- */
+  .hero{padding:56px 0 48px;}
+  .eyebrow{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.76rem; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--accent);
+    margin-bottom:20px;
+  }
+  h1{font-size:clamp(2.6rem, 6vw, 4.4rem); letter-spacing:-.015em; line-height:.98;}
+  .hero-sub{
+    margin-top:22px; font-size:clamp(1.15rem, 1.8vw, 1.3rem); color:var(--text-dim);
+    text-wrap:pretty; line-height:1.5;
+  }
+  .meta-row{
+    margin-top:36px;
+    display:grid; grid-template-columns:repeat(5,1fr); gap:0 24px;
+    border-top:1px solid var(--border);
+  }
+  .meta-item{
+    padding:16px 0;
+  }
+  .meta-label{
+    font-family:'IBM Plex Mono', monospace; font-size:.68rem;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim);
+  }
+  .meta-value{margin-top:7px; font-size:.92rem; font-weight:500;}
+
+  /* ---------- sections ---------- */
+  section{padding:52px 0; scroll-margin-top:76px;}
+  section.divider{border-top:1px solid var(--border);}
+  .section-head{margin-bottom:26px;}
+  .section-num{
+    font-family:'IBM Plex Mono', monospace; font-size:.86rem;
+    color:var(--accent); letter-spacing:.08em;
+  }
+  .section-head h2{font-size:clamp(1.9rem, 3.2vw, 2.5rem); margin-top:8px; letter-spacing:-.015em;}
+  .lede{font-family:'Fraunces', serif; font-style:italic; font-weight:500; font-size:1.3rem; line-height:1.5; color:var(--text); margin-top:14px;}
+  .body-text{font-size:1.08rem; color:var(--text-dim); margin-top:16px; line-height:1.65;}
+  .body-text + .body-text{margin-top:14px;}
+  .body-text strong{color:var(--text); font-weight:600;}
+
+  /* ---------- tldr, unboxed editorial statement ---------- */
+  .tldr-block{margin-top:16px;}
+  .tldr-lead{
+    font-family:'Fraunces', serif; font-weight:600; font-size:clamp(1.5rem, 2.6vw, 1.9rem);
+    letter-spacing:-.01em; line-height:1.3; color:var(--text);
+  }
+  .tldr-explain{margin-top:14px; font-size:1.06rem; color:var(--text-dim); line-height:1.6; max-width:640px;}
+  .tldr-items{
+    margin-top:34px;
+    display:flex; flex-wrap:wrap; gap:30px 48px;
+  }
+  .tldr-item{flex:1 1 220px; min-width:200px;}
+  .tldr-num{
+    font-family:'IBM Plex Mono', monospace; font-size:.74rem; color:var(--accent);
+  }
+  .tldr-item h3{font-size:1.15rem; margin-top:9px; font-weight:600; letter-spacing:-.01em;}
+  .tldr-item p{margin-top:8px; font-size:.94rem; color:var(--text-dim); line-height:1.55;}
+  .tldr-tag{
+    font-family:'IBM Plex Mono', monospace; font-size:.7rem; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--accent-2);
+  }
+
+  .note{
+    margin-top:24px;
+    border-left:3px solid var(--accent);
+    padding:2px 0 2px 22px;
+  }
+  .note .tag{
+    font-family:'IBM Plex Mono', monospace; font-size:.68rem;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--accent-2);
+    display:block; margin-bottom:8px;
+  }
+  .note q{quotes:'\201C' '\201D'; font-family:'Fraunces', serif; font-style:italic; font-size:1.15rem; color:var(--text);}
+  .note p{font-size:1rem; color:var(--text-dim); line-height:1.6;}
+  .note p + p{margin-top:8px; font-size:.92rem;}
+
+  /* ---------- subhead: splits a section into feature groups (Search / Filter & style of play) ---------- */
+  /* spacing only, no internal divider line, major sections carry the only dividers on this page */
+  .subhead{
+    margin-top:44px; padding-top:28px;
+  }
+  .subhead:first-of-type{margin-top:28px;}
+  .subhead .subhead-tag{
+    font-family:'IBM Plex Mono', monospace; font-size:.7rem; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--accent);
+  }
+  .subhead h3{font-size:1.5rem; margin-top:8px;}
+
+  /* ---------- research stats, plain rule row ---------- */
+  .stat-strip{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:28px;
+    border-top:1px solid var(--border);
+    padding-top:20px;
+    margin-top:26px;
+  }
+  .stat-num{
+    font-family:'Fraunces', serif; font-weight:600;
+    font-size:2.1rem; color:var(--accent);
+  }
+  .stat-label{margin-top:6px; font-size:.82rem; color:var(--text-dim); line-height:1.45;}
+
+  /* ---------- gap list (problem), plain rule rows ---------- */
+  .gap-list{margin-top:24px;}
+  .gap-item{margin-top:26px;}
+  .gap-item:first-child{margin-top:0;}
+  .gap-num{font-family:'IBM Plex Mono', monospace; font-size:.74rem; color:var(--accent);}
+  .gap-item p{margin-top:8px; font-size:1.02rem; color:var(--text-dim); line-height:1.6;}
+  .gap-item strong{color:var(--text); font-weight:600;}
+
+  /* ---------- evidence gallery ---------- */
+  .evidence-cap{padding:14px 16px;}
+  .evidence-cap .num{
+    font-family:'IBM Plex Mono', monospace; font-size:.68rem;
+    color:var(--accent); letter-spacing:.06em;
+  }
+  .evidence-cap .num.current{color:var(--accent-2);}
+  .evidence-cap p{margin-top:6px; font-size:.88rem; color:var(--text-dim); line-height:1.55;}
+
+  /* ---------- live feature (own work, full width) ---------- */
+  .live-feature{
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    overflow:hidden; margin-top:20px;
+  }
+  .live-feature img, .live-feature video{
+    display:block; width:100%; height:auto;
+    border-bottom:1px solid var(--border);
+  }
+  .states-grid-3{margin-top:20px;}
+  .states-grid-3 .live-feature{margin-top:24px; max-width:1290px;}
+  .states-grid-3 .live-feature:first-child{margin-top:0;}
+  .states-grid-3 .live-feature img,
+  .states-grid-3 .live-feature video{height:auto; object-fit:contain;}
+
+  /* ---------- pull quote, section-closing relationship statement ---------- */
+  .pull-quote{
+    margin-top:36px;
+    padding:4px 0 4px 22px;
+    border-left:3px solid var(--accent);
+    font-family:'Fraunces', serif; font-style:italic; font-weight:500;
+    font-size:1.25rem; line-height:1.55; color:var(--text);
+  }
+  .pull-quote strong{font-style:normal; font-weight:600; color:var(--accent-2);}
+
+  /* ---------- preset list line ---------- */
+  .preset-list{
+    margin-top:16px; font-family:'IBM Plex Mono', monospace; font-size:.86rem;
+    letter-spacing:.02em; color:var(--accent-2);
+  }
+
+  /* ---------- flow blocks ---------- */
+  .flow{margin-top:40px;}
+  .flow:first-child{margin-top:24px;}
+  .flow-head{display:flex; align-items:baseline; gap:12px;}
+  .flow-num{
+    font-family:'Fraunces', serif; font-weight:600; font-size:1.3rem; color:var(--accent-2);
+  }
+  .flow-head h3{font-size:1.3rem;}
+  .flow p.body-text{margin-top:12px;}
+  /* flows are full-width grid items (see .wide below) so their media can fill the content column;
+     flow-text keeps headings/prose/notes at the normal reading measure inside that wider box,
+     centered so it lines up with the text column the rest of the page uses */
+  .flow-text{max-width:720px; margin-left:auto; margin-right:auto;}
+
+  /* ---------- feature list, plain divider grid ---------- */
+  .feature-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:30px 40px;
+    margin-top:20px;
+  }
+  .feature{}
+  .feature-num{font-family:'IBM Plex Mono', monospace; font-size:.72rem; color:var(--accent-2);}
+  .feature h3{font-weight:600; font-size:1.02rem; margin-top:8px; font-family:'Archivo', sans-serif;}
+  .feature p{margin-top:7px; font-size:.92rem; color:var(--text-dim); line-height:1.55;}
+
+  /* ---------- comparison table ---------- */
+  .compare-table{width:100%; border-collapse:collapse; margin-top:22px; font-size:.94rem;}
+  .compare-table th, .compare-table td{text-align:left; padding:12px 16px; border-bottom:1px solid var(--border);}
+  .compare-table th{
+    font-family:'IBM Plex Mono', monospace; font-size:.68rem; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--text-dim); font-weight:500;
+  }
+  .compare-table td.bad{color:#B24545;}
+  .compare-table td.good{color:var(--accent); font-weight:600;}
+
+  /* ---------- impact, plain divider rows ---------- */
+  .impact-grid{margin-top:22px;}
+  .impact-item{margin-top:28px; display:grid; grid-template-columns:1fr 2fr; gap:24px; align-items:baseline;}
+  .impact-item:first-child{margin-top:0;}
+  .impact-item h3{font-size:1.2rem; line-height:1.3;}
+  .impact-item p{font-size:.94rem; color:var(--text-dim); line-height:1.55;}
+
+  /* ---------- learnings, plain divider rows ---------- */
+  .learnings-list{margin-top:18px;}
+  .learning{margin-top:30px; display:flex; gap:18px; align-items:baseline;}
+  .learnings-list .learning:first-child{margin-top:0;}
+  .learning-num{font-family:'Fraunces', serif; font-weight:600; color:var(--accent); font-size:1.5rem; flex:none; width:32px;}
+  .learning h3{font-size:1.12rem;}
+  .learning p{margin-top:6px; font-size:.94rem; color:var(--text-dim); line-height:1.55;}
+
+  /* ---------- related projects (kept as cards, they're a nav aid) ---------- */
+  .related{padding:52px 0 8px; border-top:1px solid var(--border);}
+  .related-label{font-family:'IBM Plex Mono', monospace; font-size:.74rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text-dim); margin-bottom:18px;}
+  .related-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  .related-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    overflow:hidden; text-decoration:none; color:var(--text); display:block;
+    transition:border-color .15s;
+  }
+  .related-card:not(.soon):hover{border-color:var(--accent);}
+  .related-thumb{
+    display:block; width:100%; aspect-ratio:16/9;
+    background:var(--surface-2); border-bottom:1px solid var(--border);
+  }
+  .related-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .related-thumb.placeholder{display:flex; align-items:center; justify-content:center;}
+  .related-thumb.placeholder svg{width:26%; height:26%; opacity:.45;}
+  .related-body{padding:18px 20px;}
+  .related-tag{font-family:'IBM Plex Mono', monospace; font-size:.66rem; letter-spacing:.06em; color:var(--accent); text-transform:uppercase;}
+  .related-card h3{font-size:1.08rem; margin-top:9px;}
+  .related-card p{margin-top:7px; font-size:.86rem; color:var(--text-dim); line-height:1.5;}
+  .related-card.soon{opacity:.6;}
+
+  footer{
+    border-top:1px solid var(--border);
+    padding:34px 0 60px;
+    display:flex; justify-content:space-between; align-items:flex-start;
+    flex-wrap:wrap; gap:24px;
+  }
+  footer .fnote{font-size:.8rem; color:var(--text-dim); line-height:1.55; max-width:52ch;}
+  footer .links{display:flex; align-items:center; gap:20px; flex:none;}
+  footer a.contact{
+    font-family:'IBM Plex Mono', monospace; font-size:.82rem;
+    color:var(--accent); text-decoration:none; border-bottom:1px solid transparent;
+  }
+  footer a.contact:hover{border-bottom-color:var(--accent);}
+  footer a.contact .ext{display:inline-block; margin-left:2px; font-size:.9em;}
+
+  @media (max-width: 720px){
+    .meta-row{grid-template-columns:1fr 1fr;}
+    .meta-item{border-right:none; border-bottom:1px solid var(--border); padding:10px 0;}
+    .feature-grid{grid-template-columns:1fr;}
+    .related-grid{grid-template-columns:1fr;}
+    .impact-item{grid-template-columns:1fr;}
+    .stat-strip{grid-template-columns:1fr 1fr;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+
+  /* ---------- draft placeholders: content still missing, deliberately off-system so it's obvious ---------- */
+  .placeholder{
+    background:#0A0A0A;
+    color:#F2EFE6;
+    border:1px dashed #4A4A4A;
+    border-radius:10px;
+    padding:18px 22px;
+    margin-top:22px;
+  }
+  .placeholder .ph-label{
+    font-family:'IBM Plex Mono', monospace; font-size:.68rem; letter-spacing:.08em;
+    text-transform:uppercase; color:#E7A93E; display:block; margin-bottom:8px;
+  }
+  .placeholder p{font-size:.92rem; color:#C9C4B4; line-height:1.6; margin:0;}
+  .placeholder p + p{margin-top:6px;}
+  .ph-inline{
+    display:inline-block;
+    background:#0A0A0A; color:#E7A93E;
+    border:1px dashed #4A4A4A; border-radius:5px;
+    font-family:'IBM Plex Mono', monospace; font-size:.72rem;
+    padding:2px 7px; margin-left:4px;
+  }
+  .media-placeholder{
+    background:#0A0A0A; border:1px dashed #4A4A4A; border-radius:12px;
+    min-height:340px; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; text-align:center; padding:32px; margin-top:20px;
+  }
+  .media-placeholder .ph-label{margin-bottom:10px;}
+  .media-placeholder p{color:#C9C4B4; font-size:.92rem; max-width:44ch;}
+</style>
+</head>
+<body>
+<div class="drawer-scrim" id="drawerScrim"></div>
+<nav class="drawer" id="drawer" aria-label="Project switcher">
+  <div class="drawer-head">
+    <span class="drawer-label">Projects</span>
+    <button type="button" class="drawer-close" id="drawerClose" aria-label="Close menu">&#10005;</button>
+  </div>
+  <div class="drawer-list">
+    <a class="drawer-item current" href="#">
+      <div class="drawer-thumb placeholder">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" stroke="var(--text-dim)" stroke-width="1.6"/><line x1="15.3" y1="15.3" x2="21" y2="21" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </div>
+      <span class="dtag">Project 01 &middot; Current</span>
+      <h3>Search & filter</h3>
+      <p>Search on the casino homepage used to hard redirect players away from a running game. Replaced with a non destructive modal, plus Filter and Style of Play to narrow the library by intent.</p>
+    </a>
+    <a class="drawer-item" href="/jackpot-layout/">
+      <div class="drawer-thumb placeholder">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="var(--text-dim)" stroke-width="1.6"/><path d="M12 8v4l3 2" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </div>
+      <span class="dtag">Project 02</span>
+      <h3>Jackpot Layout</h3>
+      <p>A jackpot card built for a dozen providers, tested against a competitor pattern before shipping.</p>
+    </a>
+    <a class="drawer-item" href="/providers-layout/">
+      <div class="drawer-thumb placeholder">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="5" cy="12" r="1.6" fill="var(--text-dim)"/><circle cx="12" cy="12" r="1.6" fill="var(--text-dim)"/><circle cx="19" cy="12" r="1.6" fill="var(--text-dim)"/></svg>
+      </div>
+      <span class="dtag">Project 03</span>
+      <h3>Providers Layout</h3>
+      <p>A weekly "Provider of the Week" carousel, reusing the rotation pattern carried over from the Jackpot card study.</p>
+    </a>
+    <a class="drawer-item" href="/lobby-layouts/">
+      <div class="drawer-thumb placeholder">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1" stroke="var(--text-dim)" stroke-width="1.6"/><rect x="13" y="4" width="7" height="7" rx="1" stroke="var(--text-dim)" stroke-width="1.6"/><rect x="4" y="13" width="7" height="7" rx="1" stroke="var(--text-dim)" stroke-width="1.6"/><rect x="13" y="13" width="7" height="7" rx="1" stroke="var(--text-dim)" stroke-width="1.6"/></svg>
+      </div>
+      <span class="dtag">Project 04</span>
+      <h3>Various Lobby Layout Entry Point</h3>
+      <p>Four smaller lobby layouts, one page: hot and cold, top winners, best-of, and video.</p>
+    </a>
+  </div>
+  <div class="drawer-foot">More projects will be added here as they're built.</div>
+</nav>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="/"><b>Jay Imtyas</b> &middot; Lead Product Designer</a>
+    <div class="topbar-right-group">
+      <nav class="topnav">
+        <a href="/">Work</a>
+        <a href="/about/">About</a>
+        <a href="mailto:outlandishvision@yahoo.com">Contact</a>
+      </nav>
+      <span class="topbar-right">01 / SEARCH &amp; FILTER</span>
+      <button type="button" class="hamburger" id="hamburgerBtn" aria-haspopup="true" aria-expanded="false" aria-controls="drawer" aria-label="Open project menu">
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <line class="l1" x1="1" y1="4" x2="15" y2="4"></line>
+          <line class="l2" x1="1" y1="8" x2="15" y2="8"></line>
+          <line class="l3" x1="1" y1="12" x2="15" y2="12"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <nav class="toc" aria-label="Section navigation">
+    <div class="toc-label">On this page</div>
+    <a href="#intro">Introduction</a>
+    <a href="#tldr">TL;DR</a>
+    <a href="#preview">Preview</a>
+    <a href="#research">User research</a>
+    <a href="#problem">Problem</a>
+    <a href="#flows">Core flows</a>
+    <a href="#impact">Impact</a>
+    <a href="#learnings">Takeaways</a>
+  </nav>
+
+  <main class="main">
+
+    <div class="hero">
+      <span class="eyebrow">Project 01 &middot; Novibet Casino Platform</span>
+      <h1>Search &amp; filter</h1>
+      <p class="hero-sub">A search and filtering experience designed around continuity, multi-game play, and a new way to translate technical casino attributes into how players actually want to play.</p>
+
+      <div class="meta-row wide">
+        <div class="meta-item">
+          <div class="meta-label">Role</div>
+          <div class="meta-value">Lead Product Designer</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Surface</div>
+          <div class="meta-value">Casino homepage, in-game view</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Platform</div>
+          <div class="meta-value">Web app, iOS, Android</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Method</div>
+          <div class="meta-value">Design judgment + moderated usability testing</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Status</div>
+          <div class="meta-value">Search, Filter &amp; Style of Play shipped and live</div>
+        </div>
+      </div>
+    </div>
+
+    <section id="intro">
+      <div class="section-head">
+        <span class="section-num">01 &middot; Introduction</span>
+        <h2>One search system, wherever the player is.</h2>
+      </div>
+      <p class="body-text">Casino discovery isn't limited to the lobby. Players might be browsing the homepage, already in a game, or running multiple frames at once. Global Search needed to work the same way across all of it, without forcing players to abandon what they were doing.</p>
+      <p class="body-text">Filter needed to help players narrow a large library quickly, which led to Style of Play: a preset-first model that translates RTP and volatility into familiar play intentions, while keeping manual control one tap away.</p>
+    </section>
+
+    <section id="tldr" class="divider">
+      <div class="section-head">
+        <span class="section-num">02 &middot; TL;DR</span>
+        <h2>The short version</h2>
+      </div>
+      <div class="tldr-block">
+        <p class="tldr-lead">Find the next game without losing the one you're already in.</p>
+        <p class="tldr-explain">Global Search handles where and how a player finds the next game. Filter helps narrow the library, with Style of Play bridging technical attributes and player intent.</p>
+        <div class="tldr-items">
+          <div class="tldr-item">
+            <span class="tldr-num mono">01</span>
+            <h3>Global Search from anywhere</h3>
+            <p>Discover and launch games from the casino home or directly from an active game session.</p>
+          </div>
+          <div class="tldr-item">
+            <span class="tldr-num mono">02</span>
+            <h3>Preserve the session</h3>
+            <p>Empty slots fill automatically. When every frame is occupied, the player decides what happens next.</p>
+          </div>
+          <div class="tldr-item">
+            <span class="tldr-num mono">03</span>
+            <h3>Filter by intent</h3>
+            <p>Style of Play turns RTP and volatility into ready-made presets based on the kind of session a player wants.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="preview" class="divider">
+      <div class="section-head">
+        <span class="section-num">03 &middot; Preview</span>
+        <h2>What's live today</h2>
+      </div>
+      <p class="lede">Global Search works the same way from the homepage or from inside a running game. Filter and Style of Play turn a large library into a shortlist in a few taps.</p>
+
+      <div class="states-grid-3 wide">
+        <div class="live-feature">
+          <video autoplay muted loop playsinline poster="media/search-from-home-poster.jpg">
+            <source src="media/search-from-home.mp4" type="video/mp4">
+          </video>
+          <div class="evidence-cap">
+            <span class="num mono current">CURRENT &middot; LIVE</span>
+            <p>Global Search, happy path. Opening search from the casino home, the modal comes up over the page instead of navigating away.</p>
+          </div>
+        </div>
+        <div class="live-feature">
+          <video autoplay muted loop playsinline poster="media/in-game-search-poster.jpg">
+            <source src="media/in-game-search.mp4" type="video/mp4">
+          </video>
+          <div class="evidence-cap">
+            <span class="num mono current">CURRENT &middot; LIVE</span>
+            <p>Global Search, in-game. Same modal, opened while a game is running underneath, the session keeps going.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="states-grid-3 wide">
+        <div class="live-feature">
+          <video autoplay muted loop playsinline poster="media/filter-style-preview-poster.jpg">
+            <source src="media/filter-style-preview.mp4" type="video/mp4">
+          </video>
+          <div class="evidence-cap">
+            <span class="num mono current">CURRENT &middot; LIVE</span>
+            <p>Filter and Style of Play. Home, open Filter, open Style of Play, apply, land in filtered Global Search results.</p>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <section id="research" class="divider">
+      <div class="section-head">
+        <span class="section-num">04 &middot; User research</span>
+        <h2>One part judgment, one part tested with real players</h2>
+      </div>
+
+      <div class="subhead">
+        <span class="subhead-tag">Search</span>
+        <h3>Grounded in judgment, not a study, yet</h3>
+      </div>
+      <p class="lede">There is no moderated study behind the search modal, it shipped based on the complaint volume covered in the introduction above, not a formal test.</p>
+      <div class="note">
+        <span class="tag">Next validation</span>
+        <p>Formal validation is planned for iteration 2, where open questions on result grouping are being worked through with product and engineering before anything locks.</p>
+      </div>
+      <div class="subhead">
+        <span class="subhead-tag">Filter &amp; style of play</span>
+        <h3>Tested on real players before anything shipped</h3>
+      </div>
+      <p class="lede">Players knew the kind of experience they wanted, but not necessarily the terminology behind it.</p>
+      <div class="feature-grid">
+        <div class="feature">
+          <div class="feature-num mono">A</div>
+          <h3>Player intent was already clear</h3>
+          <p>Players described what they wanted in familiar terms such as quick wins, bigger wins, lower risk, shorter sessions, or balanced gameplay.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-num mono">B</div>
+          <h3>RTP and volatility, useful but poorly understood</h3>
+          <p>Those attributes influence the experience, but they were not consistently understood or naturally used to describe a preference.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-num mono">C</div>
+          <h3>Discovery could become guesswork</h3>
+          <p>Without guidance, choosing from a large game library could fall back to theme, provider familiarity, or trial and error.</p>
+        </div>
+      </div>
+
+      <div class="stat-strip wide">
+        <div class="stat">
+          <div class="stat-num mono">6</div>
+          <div class="stat-label">participants, casual to experienced slot players, ages 27 to 45</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num mono">3</div>
+          <div class="stat-label">tasks: pick a preset, use manual RTP/volatility controls, try custom mode</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num mono">2</div>
+          <div class="stat-label">versions tested, native and desktop</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num mono">1</div>
+          <div class="stat-label">format: in person, moderated, guerrilla style</div>
+        </div>
+      </div>
+
+      <div class="note">
+        <span class="tag">Key finding</span>
+        <q>I didn't realize I switched to custom, nothing really changed.</q>
+        <p>Custom/manual mode wasn't visible enough. Users overrode a preset without noticing, most expected a color change, highlight, or banner the moment they did. Presets themselves landed well, "quick, simple, ready-made", but people wanted to see the effect the instant they tapped one.</p>
+      </div>
+
+      <div class="note">
+        <span class="tag">Key finding</span>
+        <q>Why isn't the RTP max locked at 97%? Feels odd.</q>
+        <p>RTP and volatility understanding varies a lot. Experienced players read the numbers fine, casual players went by feeling, not percentages, and slider ranges confused more than one participant. Several asked to save their own preset outright, "what I always play."</p>
+      </div>
+    </section>
+
+    <section id="problem" class="divider">
+      <div class="section-head">
+        <span class="section-num">05 &middot; Problem statement</span>
+        <h2>Where the current experience breaks</h2>
+      </div>
+
+      <div class="subhead">
+        <span class="subhead-tag">Search</span>
+        <h3>Discovery could interrupt the current context</h3>
+      </div>
+      <p class="lede">Players needed a fast way to find the next game, whether browsing or already playing. The old redirect could pull them out of an active session.</p>
+      <div class="gap-list">
+        <div class="gap-item">
+          <span class="gap-num mono">GAP 01</span>
+          <p><strong>Search hard redirects the player away.</strong> The page they were on disappears the moment search opens. Browser back doesn't reliably recover it, every search is a full page load, not an in-place action.</p>
+        </div>
+        <div class="gap-item">
+          <span class="gap-num mono">GAP 02</span>
+          <p><strong>Mid-game, that redirect loses the session.</strong> The part that matters most, it doesn't just lose a page, it loses whatever state the game session was carrying.</p>
+        </div>
+      </div>
+      <div class="note">
+        <span class="tag">How this surfaced</span>
+        <p>Player complaints: a steady volume of players reporting lost sessions and context after using search. No formal metrics, the complaint volume was the signal on its own.</p>
+      </div>
+
+      <div class="subhead">
+        <span class="subhead-tag">Filter &amp; style of play</span>
+        <h3>The system's language was not always the player's language</h3>
+      </div>
+      <p class="lede">RTP and volatility matter, but they're rarely how someone describes the experience they want.</p>
+      <div class="gap-list">
+        <div class="gap-item">
+          <span class="gap-num mono">GAP 03</span>
+          <p><strong>RTP and volatility are important and poorly understood.</strong> Even experienced players misread the percentages and tiers. What they actually care about is what those attributes affect, win frequency, risk, session length, payout style, not the terminology.</p>
+        </div>
+        <div class="gap-item">
+          <span class="gap-num mono">GAP 04</span>
+          <p><strong>Without guidance, discovery is guesswork.</strong> Players scroll dozens or hundreds of games on theme or brand familiarity alone, slower and more frictional for anyone who just wants to start playing.</p>
+        </div>
+      </div>
+      <div class="note">
+        <span class="tag">Why this exists</span>
+        <p>RTP and volatility complaints predate this project. Style of Play educates through presets and familiar naming, quick wins, casual fun, big thrills, instead of raw percentages.</p>
+      </div>
+
+      <p class="pull-quote wide">Global Search handles <strong>where and how</strong> players discover the next game. Filter handles <strong>how they narrow the library</strong>. Style of Play connects technical filtering with player intent.</p>
+    </section>
+
+    <section id="flows" class="divider">
+      <div class="section-head">
+        <span class="section-num">06 &middot; Core flows</span>
+        <h2>How each piece works</h2>
+      </div>
+
+      <div class="subhead" style="margin-top:0; padding-top:0; border-top:none;">
+        <span class="subhead-tag">Global Search</span>
+        <h3>A non destructive overlay, not a redirect</h3>
+      </div>
+      <p class="lede">The page underneath stays. The session stays.</p>
+
+      <div class="flow wide">
+        <div class="flow-text">
+          <div class="flow-head">
+            <span class="flow-num mono">01</span>
+            <h3>Search, browse, select, play</h3>
+          </div>
+          <p class="body-text">The happy path is simple: search, browse, select, play. Global Search opens on top of the lobby or the game instead of navigating away. Dismiss returns the player exactly where they were, nothing underneath is torn down.</p>
+          <p class="body-text">The same Global Search pattern can start from two places, the casino homepage or an active game view. Same modal, same behaviour, either way in.</p>
+        </div>
+      </div>
+
+      <div class="flow wide">
+        <div class="flow-text">
+          <div class="flow-head">
+            <span class="flow-num mono">02</span>
+            <h3>What it preserves</h3>
+          </div>
+          <div class="feature-grid">
+            <div class="feature">
+              <div class="feature-num mono">A</div>
+              <h3>Cancel really cancels</h3>
+              <p>Dismiss returns you exactly where you were.</p>
+            </div>
+            <div class="feature">
+              <div class="feature-num mono">B</div>
+              <h3>Reads where it opens</h3>
+              <p>The modal knows the page underneath it.</p>
+            </div>
+            <div class="feature">
+              <div class="feature-num mono">C</div>
+              <h3>Game keeps running</h3>
+              <p>The active session is never touched.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow wide">
+        <div class="flow-text">
+          <div class="flow-head">
+            <span class="flow-num mono">03</span>
+            <h3>Redirect vs modal</h3>
+          </div>
+        </div>
+        <table class="compare-table">
+          <tr><th>Dimension</th><th>Before, redirect</th><th>Now, modal</th></tr>
+          <tr><td>Page load</td><td class="bad">Full reload</td><td class="good">Instant</td></tr>
+          <tr><td>Context</td><td class="bad">Lost</td><td class="good">Preserved</td></tr>
+          <tr><td>Game session</td><td class="bad">Lost</td><td class="good">Untouched</td></tr>
+        </table>
+      </div>
+
+      <div class="flow wide">
+        <div class="flow-text">
+          <div class="flow-head">
+            <span class="flow-num mono">04</span>
+            <h3>Empty slot, automatic</h3>
+          </div>
+          <p class="body-text">Multi-game play adds a second frame. With a 2x layout running, one frame occupied and one empty, selecting a game through Global Search fills the empty slot automatically. No extra decision required, the player just gets their second game.</p>
+        </div>
+      </div>
+
+      <div class="flow wide">
+        <div class="flow-text">
+          <div class="flow-head">
+            <span class="flow-num mono">05</span>
+            <h3>Every frame full, three outcomes</h3>
+          </div>
+          <p class="body-text">When the current layout is full, nothing gets silently replaced or discarded. The player sees three ways forward.</p>
+          <div class="feature-grid">
+            <div class="feature">
+              <div class="feature-num mono">01</div>
+              <h3>Expand the layout</h3>
+              <p>Move to the next larger grid and place the selected game in the first available slot.</p>
+            </div>
+            <div class="feature">
+              <div class="feature-num mono">02</div>
+              <h3>Replace a current game</h3>
+              <p>Let the player choose which active frame should be replaced.</p>
+            </div>
+            <div class="feature">
+              <div class="feature-num mono">03</div>
+              <h3>Start fresh in 1x</h3>
+              <p>Leave the current multi-game session and launch the newly selected game on its own.</p>
+            </div>
+          </div>
+        </div>
+        <div class="states-grid-3">
+          <div class="live-feature">
+            <img src="media/safeguard-outcomes.jpg" alt="All slots are occupied dialog, showing the three outcomes: choose a slot to replace, switch to 4x to add without replacing, or start fresh in 1x view.">
+            <div class="evidence-cap">
+              <span class="num mono current">CURRENT &middot; LIVE</span>
+              <p>All slots occupied. The player picks a slot to replace, switches to a bigger layout to add without replacing, or starts fresh in 1x.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="subhead">
+        <span class="subhead-tag">Filter &amp; style of play</span>
+        <h3>Presets first, manual close behind</h3>
+      </div>
+      <p class="lede">Three building blocks, wrapped around the same idea a good audio EQ uses: a fast, confident default, with real control one tap away for anyone who wants it.</p>
+
+      <div class="flow wide">
+        <div class="flow-text">
+          <div class="flow-head">
+            <span class="flow-num mono">06</span>
+            <h3>Two ways into Filter</h3>
+          </div>
+          <p class="body-text"><strong>From Home.</strong> Filter can open directly from the homepage, no Global Search needed underneath. On apply, Filter fades down as the results modal fades up, landing the player in filtered results. It reads as one continuous motion, not a hard swap between screens.</p>
+        </div>
+        <div class="states-grid-3">
+          <div class="live-feature">
+            <img src="media/filter-from-home.jpg" alt="Filter opening directly from the casino homepage, then transitioning into filtered Global Search results.">
+            <div class="evidence-cap">
+              <span class="num mono current">CURRENT &middot; LIVE</span>
+              <p>Filter opened directly from Home, then the transition into filtered Global Search results.</p>
+            </div>
+          </div>
+        </div>
+        <div class="flow-text" style="margin-top:24px;">
+          <p class="body-text"><strong>From Global Search.</strong> Filter opens as its own modal on top rather than closing Search to make room. Search dims and scales down slightly, staying visible, then returns to full size once Filter closes. Same non-destructive principle as the redirect fix, one layer deeper: nothing underneath gets torn down to open something on top of it.</p>
+          <p class="body-text">Stacking rather than replacing keeps the previous action visible and avoids interrupting the player mid-decision, the same context-preserving principle as Global Search.</p>
+        </div>
+        <div class="states-grid-3">
+          <div class="live-feature">
+            <img src="media/stacked-modal.jpg" alt="Filter modal open on top of an active search modal, the search modal dimmed and scaled down behind it.">
+            <div class="evidence-cap">
+              <span class="num mono current">STACKED</span>
+              <p>Global Search stays open behind filter, dimmed and slightly scaled down.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow wide">
+        <div class="flow-text">
+          <div class="flow-head">
+            <span class="flow-num mono">07</span>
+            <h3>Three components</h3>
+          </div>
+          <div class="feature-grid">
+            <div class="feature">
+              <div class="feature-num mono">A</div>
+              <h3>RTP</h3>
+              <p>Return to player, one of two attributes the whole feature is built around.</p>
+            </div>
+            <div class="feature">
+              <div class="feature-num mono">B</div>
+              <h3>Volatility</h3>
+              <p>Win frequency and size, the other core attribute, shown as chips rather than a raw number.</p>
+            </div>
+            <div class="feature">
+              <div class="feature-num mono">C</div>
+              <h3>Ready-made presets</h3>
+              <p>Common player profiles mapped to an RTP and volatility combination, so nobody has to translate the jargon themselves.</p>
+            </div>
+          </div>
+          <p class="body-text">A Custom/Manual mode sits alongside the presets for anyone who wants to set RTP and volatility directly. Five named presets ship in total, each one a fixed RTP range plus a volatility band, ordered as a natural risk spectrum from safest to boldest so the row itself reads left to right as low to high risk.</p>
+          <p class="preset-list mono">Quick Wins &middot; Casual Fun &middot; Long Run &middot; Big Thrills &middot; High Stakes &middot; Custom</p>
+        </div>
+        <div class="states-grid-3">
+          <div class="live-feature">
+            <img src="media/filter-default.jpg" alt="The Style of Play component on mobile, all six presets shown side by side, each with its own volatility and RTP range.">
+            <div class="evidence-cap">
+              <span class="num mono current">MOBILE &middot; ALL PRESETS</span>
+              <p>Style of Play on mobile, all six presets. Each one sets its own volatility and RTP, read only until Custom is touched.</p>
+            </div>
+          </div>
+        </div>
+        <div class="flow-text">
+          <div class="note">
+            <span class="tag">Mobile behavior</span>
+            <p>On small screens the preset row scrolls horizontally while the divider and Custom button stay pinned to the right edge. Whichever preset is active snaps to the left edge, center, or right edge of the row depending on its position, so the selected one is never left half cut off.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow wide">
+        <div class="flow-text">
+          <div class="flow-head">
+            <span class="flow-num mono">08</span>
+            <h3>Design inspiration, borrowed from audio EQ presets</h3>
+          </div>
+          <p class="body-text">Instead of looking only at other casino filters, the interaction model borrowed from consumer audio products. Sony's Headphones app, Apple Music and Spotify use presets as an approachable starting point, while Bang &amp; Olufsen's BeoSonic shows how manual control can stay expressive without exposing raw settings first.</p>
+          <div class="note">
+            <span class="tag">Shared principle</span>
+            <p>Presets are the foundation, manual tuning stays close, and every change gets visible feedback.</p>
+          </div>
+          <p class="body-text mono" style="font-size:.94rem;">Choose a preset &rarr; See mapped values &rarr; Fine-tune with Custom</p>
+        </div>
+        <div class="states-grid-3">
+          <div class="live-feature">
+            <img src="media/filter-search.jpg" alt="Mood board of audio EQ and preset references: Sony headphones app, Bang and Olufsen Beoplay EQ and BeoSonic, Apple Music and Boom 3D equalizers, and playback preset panels.">
+            <div class="evidence-cap">
+              <span class="num mono current">MOOD BOARD</span>
+              <p>Reference set: Sony, Bang &amp; Olufsen, Apple Music, and other audio apps.</p>
+            </div>
+          </div>
+          <div class="live-feature">
+            <img src="media/search-empty-state.jpg" alt="Global Search empty state, no games found message with a row of recommended games below.">
+            <div class="evidence-cap">
+              <span class="num mono current">EMPTY STATE &middot; SEARCH</span>
+              <p>Global Search, no results. Recommended games take the place of a dead end.</p>
+            </div>
+          </div>
+          <div class="live-feature">
+            <img src="media/filter-empty.jpg" alt="Filters panel empty state, mascot illustration, one of a small set shown at random.">
+            <div class="evidence-cap">
+              <span class="num mono current">EMPTY STATE &middot; FILTERS</span>
+              <p>Filters, no results. One of a small set of mascot illustrations, picked at random each time this state shows.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow wide">
+        <div class="flow-text">
+          <div class="flow-head">
+            <span class="flow-num mono">09</span>
+            <h3>What testing changed</h3>
+          </div>
+          <p class="body-text">The study surfaced one real problem: people didn't notice when they'd overridden a preset by touching a slider or chip, custom mode looked identical to whatever preset they started from. Fix direction: give custom mode its own visual state the instant it's overridden, and make preset taps respond instantly rather than waiting on a confirm step.</p>
+          <div class="note">
+            <span class="tag">Spec, reset logic</span>
+            <p>A revert icon stays hidden until a Volatility chip is touched or the RTP slider is moved, the exact moment a preset gets silently overridden. Tapping it clears the selection and hides the icon again, custom mode now has its own visible marker.</p>
+          </div>
+          <div class="note">
+            <span class="tag">Also raised in testing</span>
+            <p>Humanized copy over raw percentages ("small frequent wins vs. big rare wins" rather than an RTP number), plus a repeated ask for personalization, a saved preset, or a "your usual games" view. A real opportunity, not yet scoped.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="impact" class="divider">
+      <div class="section-head">
+        <span class="section-num">07 &middot; Impact</span>
+        <h2>Where each part stands</h2>
+      </div>
+      <p class="lede">Research did not end as a list of open problems. It changed the product.</p>
+      <p class="body-text">Testing highlighted where preset and manual state, feedback, and the explanation of RTP and volatility needed to be clearer. Those findings informed subsequent iterations before release.</p>
+
+      <div class="subhead">
+        <span class="subhead-tag">Search</span>
+      </div>
+      <div class="impact-grid">
+        <div class="impact-item">
+          <h3>No usage data yet</h3>
+          <p>This iteration doesn't have metrics attached. The case for it rests on the session-loss stakes above, not a stat strip.</p>
+        </div>
+        <div class="impact-item">
+          <h3>Result grouping is still ahead</h3>
+          <p>How Global Search results get grouped is still being worked through with product and engineering, feeding into ongoing stakeholder review.</p>
+        </div>
+        <div class="impact-item">
+          <h3>Complaints down, reaction positive</h3>
+          <p>Session and context loss complaints have gone down since the modal shipped. Internal reaction has been positive too, it's more encouraging to click search now that closing it doesn't cost you your spot.</p>
+        </div>
+      </div>
+
+      <div class="subhead">
+        <span class="subhead-tag">Filter &amp; style of play</span>
+      </div>
+      <div class="impact-grid">
+        <div class="impact-item">
+          <h3>Complaints went down after launch</h3>
+          <p>Since style of play started rolling out, RTP and volatility related complaints have dropped. The clearest real-world signal that presets and familiar naming are closing the gap raw percentages couldn't.</p>
+        </div>
+        <div class="impact-item">
+          <h3>Validated with real players too</h3>
+          <p>The usability study backs up what the complaint trend already showed. Presets were understood and perceived as a quicker, simpler way to narrow the library.</p>
+        </div>
+        <div class="impact-item">
+          <h3>Personalization is the strongest opening</h3>
+          <p>Multiple participants asked to save their own preset unprompted, "what I always play." Not yet scoped, but the clearest next move the research pointed at.</p>
+        </div>
+        <div class="impact-item">
+          <h3>The custom-mode fix shipped with it</h3>
+          <p>Custom mode needed to look different from a preset the instant someone overrides it. The reset icon logic is the answer that went out, direct response to what the study found.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="learnings" class="divider">
+      <div class="section-head">
+        <span class="section-num">08 &middot; Takeaways</span>
+        <h2>What I'd tighten next time</h2>
+      </div>
+      <div class="learnings-list">
+        <div class="learning">
+          <span class="learning-num mono">01</span>
+          <div>
+            <h3>Preserve context until the user chooses otherwise.</h3>
+            <p>Global Search, multi-game safeguards, and the Search / Filter relationship all came back to the same principle: avoid destroying useful state just to move the player forward.</p>
+          </div>
+        </div>
+        <div class="learning">
+          <span class="learning-num mono">02</span>
+          <div>
+            <h3>Translate system language into user intent.</h3>
+            <p>Style of Play became useful because players could express the kind of experience they wanted without first having to understand RTP and volatility.</p>
+          </div>
+        </div>
+        <div class="learning">
+          <span class="learning-num mono">03</span>
+          <div>
+            <h3>Edge cases are part of the core experience.</h3>
+            <p>The interesting product work was not only getting someone from Global Search to a game. It was deciding what should happen when their active session was already full.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="related">
+      <div class="related-label">More projects</div>
+      <div class="related-grid wide">
+        <a class="related-card" href="/jackpot-layout/">
+          <div class="related-thumb placeholder">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8" stroke="var(--text-dim)" stroke-width="1.6"/><path d="M12 8v4l3 2" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </div>
+          <div class="related-body">
+            <span class="related-tag">Project 02</span>
+            <h3>Jackpot Layout</h3>
+            <p>A jackpot card built for a dozen providers, tested against a competitor pattern before shipping.</p>
+          </div>
+        </a>
+        <a class="related-card" href="/providers-layout/">
+          <div class="related-thumb placeholder">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="5" cy="12" r="1.6" fill="var(--text-dim)"/><circle cx="12" cy="12" r="1.6" fill="var(--text-dim)"/><circle cx="19" cy="12" r="1.6" fill="var(--text-dim)"/></svg>
+          </div>
+          <div class="related-body">
+            <span class="related-tag">Project 03</span>
+            <h3>Providers Layout</h3>
+            <p>A weekly "Provider of the Week" carousel, reusing the rotation pattern carried over from the Jackpot card study.</p>
+          </div>
+        </a>
+        <a class="related-card" href="/lobby-layouts/">
+          <div class="related-thumb placeholder">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1" stroke="var(--text-dim)" stroke-width="1.6"/><rect x="13" y="4" width="7" height="7" rx="1" stroke="var(--text-dim)" stroke-width="1.6"/><rect x="4" y="13" width="7" height="7" rx="1" stroke="var(--text-dim)" stroke-width="1.6"/><rect x="13" y="13" width="7" height="7" rx="1" stroke="var(--text-dim)" stroke-width="1.6"/></svg>
+          </div>
+          <div class="related-body">
+            <span class="related-tag">Project 04</span>
+            <h3>Various Lobby Layout Entry Point</h3>
+            <p>Four smaller lobby layouts, one page: hot and cold, top winners, best-of, and video.</p>
+          </div>
+        </a>
+      </div>
+      </div>
+
+    <footer>
+      <p class="fnote">&copy; The designs featured in my portfolio belong to the collaborating companies, each retaining its respective ownership. Any expressed opinions or viewpoints are solely my own and do not represent those of any company.</p>
+      <div class="links">
+        <a class="contact" href="mailto:outlandishvision@yahoo.com">Reach out</a>
+        <a class="contact" href="https://www.linkedin.com/in/jay-imtyas/" target="_blank" rel="noopener">LinkedIn</a>
+        <a class="contact" href="https://outlandishvision.framer.website/" target="_blank" rel="noopener" aria-label="Older portfolio (opens in a new tab)">Older portfolio<span class="ext" aria-hidden="true">&#8599;</span></a>
+      </div>
+    </footer>
+
+  </main>
+</div>
+
+<script>
+(function(){
+  // table of contents scrollspy
+  var tocLinks = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
+  var sections = tocLinks.map(function(a){ return document.getElementById(a.getAttribute('href').slice(1)); }).filter(Boolean);
+  if('IntersectionObserver' in window && sections.length){
+    var observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        var link = document.querySelector('.toc a[href="#' + entry.target.id + '"]');
+        if(!link) return;
+        if(entry.isIntersecting){
+          tocLinks.forEach(function(l){ l.classList.remove('active'); });
+          link.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    sections.forEach(function(s){ observer.observe(s); });
+  }
+
+  // project switcher drawer
+  var btn = document.getElementById('hamburgerBtn');
+  var drawer = document.getElementById('drawer');
+  var scrim = document.getElementById('drawerScrim');
+  var closeBtn = document.getElementById('drawerClose');
+
+  function openDrawer(){
+    drawer.classList.add('is-open');
+    scrim.classList.add('is-open');
+    btn.setAttribute('aria-expanded', 'true');
+  }
+  function closeDrawer(){
+    drawer.classList.remove('is-open');
+    scrim.classList.remove('is-open');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.focus();
+  }
+  btn.addEventListener('click', function(){
+    if(drawer.classList.contains('is-open')) closeDrawer(); else openDrawer();
+  });
+  closeBtn.addEventListener('click', closeDrawer);
+  scrim.addEventListener('click', closeDrawer);
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && drawer.classList.contains('is-open')) closeDrawer();
+  });
+})();
+</script>
+</body>
+</html>

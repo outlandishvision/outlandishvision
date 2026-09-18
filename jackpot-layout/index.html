@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jackpot Layout</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,500..600&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg: #FAF6EE;
+    --surface: #FFFFFF;
+    --surface-2: #F2E9D6;
+    --text: #1B160F;
+    --text-dim: #6E6455;
+    --border: #E4D8BE;
+    --accent: #A9711A;
+    --accent-2: #7A5313;
+    --accent-ink: #FFFFFF;
+    --shadow: 0 1px 2px rgba(27,22,15,.04), 0 8px 24px rgba(27,22,15,.06);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #14110C;
+      --surface: #1D1912;
+      --surface-2: #262019;
+      --text: #F3ECDD;
+      --text-dim: #AA9F89;
+      --border: #362F20;
+      --accent: #E7A93E;
+      --accent-2: #C98F2E;
+      --accent-ink: #1B160F;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.45);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #14110C;
+    --surface: #1D1912;
+    --surface-2: #262019;
+    --text: #F3ECDD;
+    --text-dim: #AA9F89;
+    --border: #362F20;
+    --accent: #E7A93E;
+    --accent-2: #C98F2E;
+    --accent-ink: #1B160F;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.45);
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box;}
+  html{font-size:113%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Archivo', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.65;
+  }
+  h1,h2,h3{
+    font-family:'Fraunces', Georgia, serif;
+    font-weight:600;
+    text-wrap:balance;
+    margin:0;
+    color:var(--text);
+    font-variation-settings:"SOFT" 20;
+  }
+  .mono{
+    font-family:'IBM Plex Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  a{color:inherit;}
+  p{margin:0;}
+  ul{margin:0; padding:0; list-style:none;}
+  img,video{max-width:100%;}
+
+  /* ---------- top bar / site nav ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    background:color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom:1px solid var(--border);
+  }
+  .topbar-inner{
+    max-width:1680px; margin:0 auto; padding:16px 48px;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px;
+  }
+  .brand{font-size:.82rem; letter-spacing:.02em; color:var(--text-dim); text-decoration:none;}
+  .brand b{color:var(--text); font-weight:600;}
+  .topnav{display:flex; align-items:center; gap:22px;}
+  .topnav a{
+    font-family:'IBM Plex Mono', monospace; font-size:.74rem; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--text-dim); text-decoration:none;
+  }
+  .topnav a:hover{color:var(--accent);}
+  .topbar-right-group{display:flex; align-items:center; gap:22px;}
+  .topbar-right{color:var(--text-dim); font-family:'IBM Plex Mono', monospace; font-size:.74rem; letter-spacing:.04em;}
+  .hamburger{
+    appearance:none; border:none; background:none;
+    border-radius:6px; width:38px; height:38px; flex:none;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    padding:0;
+  }
+  .hamburger:hover{background:var(--surface-2);}
+  .hamburger:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .hamburger svg{display:block; width:16px; height:16px;}
+  .hamburger svg line{stroke:var(--text); stroke-width:1.6; transition:transform .18s ease, opacity .18s ease;}
+  .hamburger[aria-expanded="true"] .l1{transform:translateY(5.5px) rotate(45deg);}
+  .hamburger[aria-expanded="true"] .l2{opacity:0;}
+  .hamburger[aria-expanded="true"] .l3{transform:translateY(-5.5px) rotate(-45deg);}
+
+  /* project switcher drawer */
+  .drawer-scrim{
+    position:fixed; inset:0; background:rgba(20,17,12,.4);
+    opacity:0; visibility:hidden; transition:opacity .2s ease, visibility .2s;
+    z-index:55;
+  }
+  .drawer-scrim.is-open{opacity:1; visibility:visible;}
+  .drawer{
+    position:fixed; top:0; right:0; height:100%; width:min(400px, 88vw);
+    background:var(--surface); border-left:1px solid var(--border);
+    z-index:56; padding:22px 26px 26px;
+    transform:translateX(100%); transition:transform .22s ease;
+    overflow-y:auto;
+  }
+  .drawer.is-open{transform:translateX(0);}
+  .drawer-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:26px;}
+  .drawer-label{font-family:'IBM Plex Mono', monospace; font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text-dim);}
+  .drawer-close{
+    appearance:none; border:none; background:none; cursor:pointer; color:var(--text-dim);
+    font-size:1.1rem; line-height:1; padding:4px;
+  }
+  .drawer-close:hover{color:var(--text);}
+  .drawer-list{display:flex; flex-direction:column; gap:26px;}
+  .drawer-item{
+    display:block; text-decoration:none; color:var(--text);
+  }
+  .drawer-thumb{
+    display:block; width:100%; aspect-ratio:16/9; border-radius:8px;
+    overflow:hidden; background:var(--surface-2); margin-bottom:12px;
+  }
+  .drawer-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .drawer-thumb.placeholder{display:flex; align-items:center; justify-content:center;}
+  .drawer-thumb.placeholder svg{width:32%; height:32%; opacity:.45;}
+  .drawer-item .dtag{font-family:'IBM Plex Mono', monospace; font-size:.66rem; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-2);}
+  .drawer-item.current .dtag{color:var(--accent);}
+  .drawer-item h3{font-size:1.05rem; margin-top:6px;}
+  .drawer-item p{font-size:.84rem; color:var(--text-dim); margin-top:5px; line-height:1.5;}
+  .drawer-item.soon{opacity:.55;}
+  .drawer-item:not(.soon):hover h3{color:var(--accent-2);}
+  .drawer-foot{margin-top:22px; padding-top:16px; border-top:1px solid var(--border); font-size:.78rem; color:var(--text-dim);}
+
+  /* ---------- page layout with sidebar toc ---------- */
+  .page{
+    max-width:1680px; margin:0 auto;
+    display:flex; gap:72px;
+    padding:0 48px;
+  }
+  .toc{
+    width:220px; flex:none;
+    position:sticky; top:50%;
+    transform:translateY(-50%);
+    align-self:flex-start;
+    max-height:calc(100vh - 96px);
+    overflow-y:auto;
+  }
+  .toc-label{
+    font-family:'IBM Plex Mono', monospace; font-size:.68rem;
+    letter-spacing:.1em; text-transform:uppercase; color:var(--text-dim);
+    margin-bottom:14px;
+  }
+  .toc a{
+    display:block; font-size:.9rem; color:var(--text-dim);
+    text-decoration:none; padding:7px 0 7px 13px;
+    border-left:2px solid var(--border);
+    transition:color .15s, border-color .15s;
+  }
+  .toc a:hover{color:var(--text);}
+  .toc a.active{color:var(--accent); border-left-color:var(--accent); font-weight:600;}
+  .main{flex:1; min-width:0;}
+
+  @media (max-width: 1600px) and (min-width: 1101px){
+    .topbar-inner{padding:16px 24px;}
+    .page{padding:0 24px; gap:56px;}
+  }
+
+  @media (max-width: 1100px){
+    .toc{display:none;}
+    .page{padding:0 24px;}
+  }
+
+  /* ---------- centered reading column ---------- */
+  /* Headings and prose sit in a centered measure; media, data rows, and */
+  /* multi-item grids opt out with .wide to use the full content width. */
+  .hero, section, .related{
+    display:grid;
+    grid-template-columns:[full-start] minmax(0,1fr) [text-start] min(720px,100%) [text-end] minmax(0,1fr) [full-end];
+  }
+  .hero > *, section > *, .related > *{grid-column:text;}
+  .hero > .wide, section > .wide, .related > .wide{grid-column:full;}
+
+  /* ---------- hero ---------- */
+  .hero{padding:56px 0 48px;}
+  .eyebrow{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.76rem; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--accent);
+    margin-bottom:20px;
+  }
+  h1{font-size:clamp(2.6rem, 6vw, 4.4rem); letter-spacing:-.015em; line-height:.98;}
+  .hero-sub{
+    margin-top:22px; font-size:clamp(1.15rem, 1.8vw, 1.3rem); color:var(--text-dim);
+    text-wrap:pretty; line-height:1.5;
+  }
+  .meta-row{
+    margin-top:36px;
+    display:grid; grid-template-columns:repeat(5,1fr); gap:0 24px;
+    border-top:1px solid var(--border);
+  }
+  .meta-item{
+    padding:16px 0;
+  }
+  .meta-label{
+    font-family:'IBM Plex Mono', monospace; font-size:.68rem;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim);
+  }
+  .meta-value{margin-top:7px; font-size:.92rem; font-weight:500;}
+
+  /* ---------- sections ---------- */
+  section{padding:52px 0; scroll-margin-top:76px;}
+  section.divider{border-top:1px solid var(--border);}
+  .section-head{margin-bottom:26px;}
+  .section-num{
+    font-family:'IBM Plex Mono', monospace; font-size:.86rem;
+    color:var(--accent); letter-spacing:.08em;
+  }
+  .section-head h2{font-size:clamp(1.9rem, 3.2vw, 2.5rem); margin-top:8px; letter-spacing:-.015em;}
+  .lede{font-family:'Fraunces', serif; font-style:italic; font-weight:500; font-size:1.3rem; line-height:1.5; color:var(--text); margin-top:14px;}
+  .body-text{font-size:1.08rem; color:var(--text-dim); margin-top:16px; line-height:1.65;}
+  .body-text + .body-text{margin-top:14px;}
+  .body-text strong{color:var(--text); font-weight:600;}
+
+  /* ---------- tldr, unboxed editorial statement ---------- */
+  .tldr-block{
+    margin-top:16px;
+    display:flex; flex-wrap:wrap; gap:34px 48px;
+  }
+  .tldr-row{flex:1 1 260px; min-width:240px;}
+  .tldr-tag{
+    font-family:'IBM Plex Mono', monospace; font-size:.7rem; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--accent-2);
+  }
+  .tldr-row h3{font-size:1.5rem; margin-top:10px; font-weight:600; letter-spacing:-.01em;}
+  .tldr-row p{margin-top:10px; font-size:1.02rem; color:var(--text-dim); line-height:1.6;}
+
+  /* ---------- research stats, plain rule row ---------- */
+  .stat-strip{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:28px;
+    border-top:1px solid var(--border);
+    padding-top:20px;
+    margin-top:26px;
+  }
+  .stat-num{
+    font-family:'Fraunces', serif; font-weight:600;
+    font-size:2.1rem; color:var(--accent);
+  }
+  .stat-label{margin-top:6px; font-size:.82rem; color:var(--text-dim); line-height:1.45;}
+
+  .note{
+    margin-top:24px;
+    border-left:3px solid var(--accent);
+    padding:2px 0 2px 22px;
+  }
+  .note .tag{
+    font-family:'IBM Plex Mono', monospace; font-size:.68rem;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--accent-2);
+    display:block; margin-bottom:8px;
+  }
+  .note q{quotes:'\201C' '\201D'; font-family:'Fraunces', serif; font-style:italic; font-size:1.15rem; color:var(--text);}
+  .note p{font-size:1rem; color:var(--text-dim); line-height:1.6;}
+  .note p + p{margin-top:8px; font-size:.92rem;}
+
+  /* ---------- gap list (problem), plain rule rows ---------- */
+  .gap-list{margin-top:24px;}
+  .gap-item{margin-top:26px;}
+  .gap-item:first-child{margin-top:0;}
+  .gap-num{font-family:'IBM Plex Mono', monospace; font-size:.74rem; color:var(--accent);}
+  .gap-item p{margin-top:8px; font-size:1.02rem; color:var(--text-dim); line-height:1.6;}
+  .gap-item strong{color:var(--text); font-weight:600;}
+
+  /* ---------- evidence gallery ---------- */
+  .evidence-cap{padding:14px 16px;}
+  .evidence-cap .num{
+    font-family:'IBM Plex Mono', monospace; font-size:.68rem;
+    color:var(--accent); letter-spacing:.06em;
+  }
+  .evidence-cap .num.current{color:var(--accent-2);}
+  .evidence-cap p{margin-top:6px; font-size:.88rem; color:var(--text-dim); line-height:1.55;}
+
+  /* ---------- live feature (own work, full width) ---------- */
+  .live-feature{
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    overflow:hidden; margin-top:20px;
+  }
+  .live-feature img, .live-feature video{
+    display:block; width:100%; height:auto;
+    border-bottom:1px solid var(--border);
+  }
+  .colors-frame{margin-top:20px;}
+  .states-grid{display:grid; grid-template-columns:.82fr 1.44fr; gap:16px; margin-top:20px; align-items:stretch;}
+  .states-grid .live-feature{margin-top:0; display:flex; flex-direction:column; background:#13161F;}
+  .states-grid .live-feature img{height:400px; object-fit:contain; background:#13161F;}
+  @media (max-width:720px){
+    .states-grid{grid-template-columns:1fr;}
+    .states-grid .live-feature img{height:340px;}
+  }
+
+  /* ---------- flow blocks ---------- */
+  .flow{margin-top:40px;}
+  .flow:first-child{margin-top:24px;}
+  .flow-head{display:flex; align-items:baseline; gap:12px;}
+  .flow-num{
+    font-family:'Fraunces', serif; font-weight:600; font-size:1.3rem; color:var(--accent-2);
+  }
+  .flow-head h3{font-size:1.3rem;}
+  .flow p.body-text{margin-top:12px;}
+  .demo-note{
+    font-size:.86rem; color:var(--text-dim); margin-top:14px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .demo-note::before{content:''; width:6px; height:6px; border-radius:50%; background:var(--accent-2); flex:none;}
+
+  /* ---------- feature list (config A-D), plain divider grid ---------- */
+  .feature-grid{
+    display:grid; grid-template-columns:repeat(2,1fr); gap:30px 40px;
+    margin-top:20px;
+  }
+  .feature{}
+  .feature-num{font-family:'IBM Plex Mono', monospace; font-size:.72rem; color:var(--accent-2);}
+  .feature h3{font-weight:600; font-size:1.02rem; margin-top:8px; font-family:'Archivo', sans-serif;}
+  .feature p{margin-top:7px; font-size:.92rem; color:var(--text-dim); line-height:1.55;}
+
+  /* ---------- impact, plain divider rows ---------- */
+  .impact-grid{margin-top:22px;}
+  .impact-item{margin-top:28px; display:grid; grid-template-columns:1fr 2fr; gap:24px; align-items:baseline;}
+  .impact-item:first-child{margin-top:0;}
+  .impact-item h3{font-size:1.2rem; line-height:1.3;}
+  .impact-item p{font-size:.94rem; color:var(--text-dim); line-height:1.55;}
+
+  /* ---------- learnings, plain divider rows ---------- */
+  .learnings-list{margin-top:18px;}
+  .learning{margin-top:30px; display:flex; gap:18px; align-items:baseline;}
+  .learnings-list .learning:first-child{margin-top:0;}
+  .learning-num{font-family:'Fraunces', serif; font-weight:600; color:var(--accent); font-size:1.5rem; flex:none; width:32px;}
+  .learning h3{font-size:1.12rem;}
+  .learning p{margin-top:6px; font-size:.94rem; color:var(--text-dim); line-height:1.55;}
+
+  /* ---------- related projects (kept as cards, they're a nav aid) ---------- */
+  .related{padding:52px 0 8px; border-top:1px solid var(--border);}
+  .related-label{font-family:'IBM Plex Mono', monospace; font-size:.74rem; letter-spacing:.1em; text-transform:uppercase; color:var(--text-dim); margin-bottom:18px;}
+  .related-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  .related-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    overflow:hidden; text-decoration:none; color:var(--text); display:block;
+    transition:border-color .15s;
+  }
+  .related-card:not(.soon):hover{border-color:var(--accent);}
+  .related-thumb{
+    display:block; width:100%; aspect-ratio:16/9;
+    background:var(--surface-2); border-bottom:1px solid var(--border);
+  }
+  .related-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .related-thumb.placeholder{display:flex; align-items:center; justify-content:center;}
+  .related-thumb.placeholder svg{width:26%; height:26%; opacity:.45;}
+  .related-body{padding:18px 20px;}
+  .related-tag{font-family:'IBM Plex Mono', monospace; font-size:.66rem; letter-spacing:.06em; color:var(--accent); text-transform:uppercase;}
+  .related-card h3{font-size:1.08rem; margin-top:9px;}
+  .related-card p{margin-top:7px; font-size:.86rem; color:var(--text-dim); line-height:1.5;}
+  .related-card.soon{opacity:.6;}
+
+  footer{
+    border-top:1px solid var(--border);
+    padding:34px 0 60px;
+    display:flex; justify-content:space-between; align-items:flex-start;
+    flex-wrap:wrap; gap:24px;
+  }
+  footer .fnote{font-size:.8rem; color:var(--text-dim); line-height:1.55; max-width:52ch;}
+  footer .links{display:flex; align-items:center; gap:20px; flex:none;}
+  footer a.contact{
+    font-family:'IBM Plex Mono', monospace; font-size:.82rem;
+    color:var(--accent); text-decoration:none; border-bottom:1px solid transparent;
+  }
+  footer a.contact:hover{border-bottom-color:var(--accent);}
+  footer a.contact .ext{display:inline-block; margin-left:2px; font-size:.9em;}
+
+  @media (max-width: 720px){
+    .meta-row{grid-template-columns:1fr 1fr;}
+    .meta-item{border-right:none; border-bottom:1px solid var(--border); padding:10px 0;}
+    .stat-strip{grid-template-columns:1fr 1fr;}
+    .feature-grid{grid-template-columns:1fr;}
+    .related-grid{grid-template-columns:1fr;}
+    .impact-item{grid-template-columns:1fr;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="drawer-scrim" id="drawerScrim"></div>
+<nav class="drawer" id="drawer" aria-label="Project switcher">
+  <div class="drawer-head">
+    <span class="drawer-label">Projects</span>
+    <button type="button" class="drawer-close" id="drawerClose" aria-label="Close menu">&#10005;</button>
+  </div>
+  <div class="drawer-list">
+    <a class="drawer-item" href="/search-filter/">
+      <div class="drawer-thumb placeholder">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" stroke="var(--text-dim)" stroke-width="1.6"/><line x1="15.3" y1="15.3" x2="21" y2="21" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round"/></svg>
+      </div>
+      <span class="dtag">Project 01</span>
+      <h3>Search & filter</h3>
+      <p>Search on the casino homepage used to hard redirect players away from a running game. Replaced with a non destructive modal, plus Filter and Style of Play to narrow the library by intent.</p>
+    </a>
+    <a class="drawer-item current" href="#">
+      <div class="drawer-thumb"><img src="media/jackpot-thumb.jpg" alt=""></div>
+      <span class="dtag">Project 02 &middot; Current</span>
+      <h3>Jackpot Layout</h3>
+      <p>A jackpot card built for a dozen providers, tested against a competitor pattern before shipping.</p>
+    </a>
+    <a class="drawer-item" href="/providers-layout/">
+      <div class="drawer-thumb placeholder">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="5" cy="12" r="1.6" fill="var(--text-dim)"/><circle cx="12" cy="12" r="1.6" fill="var(--text-dim)"/><circle cx="19" cy="12" r="1.6" fill="var(--text-dim)"/></svg>
+      </div>
+      <span class="dtag">Project 03</span>
+      <h3>Providers Layout</h3>
+      <p>A weekly "Provider of the Week" carousel, reusing the rotation pattern carried over from the Jackpot card study.</p>
+    </a>
+    <a class="drawer-item" href="/lobby-layouts/">
+      <div class="drawer-thumb placeholder">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1" stroke="var(--text-dim)" stroke-width="1.6"/><rect x="13" y="4" width="7" height="7" rx="1" stroke="var(--text-dim)" stroke-width="1.6"/><rect x="4" y="13" width="7" height="7" rx="1" stroke="var(--text-dim)" stroke-width="1.6"/><rect x="13" y="13" width="7" height="7" rx="1" stroke="var(--text-dim)" stroke-width="1.6"/></svg>
+      </div>
+      <span class="dtag">Project 04</span>
+      <h3>Various Lobby Layout Entry Point</h3>
+      <p>Four smaller lobby layouts, one page: hot and cold, top winners, best-of, and video.</p>
+    </a>
+  </div>
+  <div class="drawer-foot">More projects will be added here as they're built.</div>
+</nav>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="/"><b>Jay Imtyas</b> &middot; Lead Product Designer</a>
+    <div class="topbar-right-group">
+      <nav class="topnav">
+        <a href="/">Work</a>
+        <a href="/about/">About</a>
+        <a href="mailto:outlandishvision@yahoo.com">Contact</a>
+      </nav>
+      <span class="topbar-right">02 / JACKPOT LAYOUT</span>
+      <button type="button" class="hamburger" id="hamburgerBtn" aria-haspopup="true" aria-expanded="false" aria-controls="drawer" aria-label="Open project menu">
+        <svg viewBox="0 0 16 16" aria-hidden="true">
+          <line class="l1" x1="1" y1="4" x2="15" y2="4"></line>
+          <line class="l2" x1="1" y1="8" x2="15" y2="8"></line>
+          <line class="l3" x1="1" y1="12" x2="15" y2="12"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+  <nav class="toc" aria-label="Section navigation">
+    <div class="toc-label">On this page</div>
+    <a href="#intro">Introduction</a>
+    <a href="#tldr">TL;DR</a>
+    <a href="#preview">Preview</a>
+    <a href="#research">User research</a>
+    <a href="#problem">Problem</a>
+    <a href="#flows">Core flows</a>
+    <a href="#impact">Impact</a>
+    <a href="#learnings">Takeaways</a>
+  </nav>
+
+  <main class="main">
+
+    <div class="hero">
+      <span class="eyebrow">Project 02 &middot; Novibet Casino Platform</span>
+      <h1>Jackpot Layout</h1>
+      <p class="hero-sub">A jackpot card for Novibet's casino lobby. Built to work for a dozen providers, stay readable in a dense grid, and settle a design debate with real users instead of opinions.</p>
+
+      <div class="meta-row wide">
+        <div class="meta-item">
+          <div class="meta-label">Role</div>
+          <div class="meta-value">Lead Product Designer</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Surface</div>
+          <div class="meta-value">Casino lobby</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Platform</div>
+          <div class="meta-value">Web app, iOS, Android</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Method</div>
+          <div class="meta-value">5 sec test + task study</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Status</div>
+          <div class="meta-value">Shipped, reused for Providers</div>
+        </div>
+      </div>
+    </div>
+
+    <section id="intro">
+      <div class="section-head">
+        <span class="section-num">01 &middot; Introduction</span>
+        <h2>One number, a dozen feeds</h2>
+      </div>
+      <p class="body-text">Novibet's casino lobby runs jackpots from more than a dozen providers, Yggdrasil, Playtech, Pragmatic Play, Amusnet, EGT Digital, with more being added. Each one sends its own feed format, tier structure, and brand colors.</p>
+      <p class="body-text">It's a high intent surface, people open it already looking for the biggest number on the page. My job was one card that works for every provider's feed, holds up in a dense grid, and never buries the number that matters.</p>
+    </section>
+
+    <section id="tldr" class="divider">
+      <div class="section-head">
+        <span class="section-num">02 &middot; TL;DR</span>
+        <h2>The short version</h2>
+      </div>
+      <div class="tldr-block">
+        <div class="tldr-row">
+          <span class="tldr-tag">Problem</span>
+          <h3>One flat card assumed one flat number.</h3>
+          <p>Several providers report tiered jackpots, not one. The old card had room for exactly one amount and no way to pin a provider to a fixed spot.</p>
+        </div>
+        <div class="tldr-row">
+          <span class="tldr-tag">Solution</span>
+          <h3>Two card states, tested before shipping.</h3>
+          <p>Compact by default. Focused on hover or center scroll, revealing every tier. Validated against a competitor pattern with a moderated study first.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="preview" class="divider">
+      <div class="section-head">
+        <span class="section-num">03 &middot; Preview</span>
+        <h2>What's live today</h2>
+      </div>
+      <p class="lede">What's shipping on Novibet right now. Compact by default, one card per provider.</p>
+
+      <div class="live-feature wide">
+        <video autoplay muted loop playsinline>
+          <source src="media/jackpot-live.webm" type="video/webm">
+          <source src="media/jackpot-live.mp4" type="video/mp4">
+        </video>
+        <div class="evidence-cap">
+          <span class="num mono current">CURRENT &middot; LIVE</span>
+          <p>Real production capture. Compact by default, one card per provider, each taking its turn to reveal its full tier breakdown.</p>
+        </div>
+      </div>
+
+      <div class="note">
+        <span class="tag">From the brief</span>
+        <p>A provider layout needs room for up to four tiered amounts, not one, the way Red Tiger already shows Mega, Super, Amazing and Casual pools. Content teams also need a way to pin a specific provider to a fixed spot, independent of pool size or how it would otherwise sort.</p>
+      </div>
+    </section>
+
+
+    <section id="research" class="divider">
+      <div class="section-head">
+        <span class="section-num">04 &middot; User research</span>
+        <h2>Testing the idea before shipping it</h2>
+      </div>
+      <p class="lede">Two working prototypes made the debate concrete. One close to a competitor's pattern with Novibet's branding, one built around the compact and focused idea. A moderated evaluation settled it with real players.</p>
+
+      <div class="stat-strip wide">
+        <div class="stat">
+          <div class="stat-num mono">8</div>
+          <div class="stat-label">participants, 4 per prototype across two devices</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num mono">2</div>
+          <div class="stat-label">prototypes compared, same content, different card</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num mono">3</div>
+          <div class="stat-label">phases: first impression, task, comparative interview</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num mono">1</div>
+          <div class="stat-label">shared benchmark task, timed on both prototypes</div>
+        </div>
+      </div>
+
+      <p class="body-text" style="margin-top:24px;">Each session runs a 5 second first impression test, a timed task, then a side by side comparison once both prototypes have been seen. The prototypes are functionally identical, this is about which one communicates amount, game, and provider faster, with less confusion.</p>
+
+      <div class="note">
+        <span class="tag">Benchmark task</span>
+        <q>Find an Amusnet game with the biggest jackpot amount.</q>
+        <p>Logged per participant: time to locate the amount, the path taken, any hesitation, and their comments, followed by "what would you change to make this easier?"</p>
+      </div>
+    </section>
+
+    <section id="problem" class="divider">
+      <div class="section-head">
+        <span class="section-num">05 &middot; Problem</span>
+        <h2>How might we show every tier without losing the number people came for?</h2>
+      </div>
+      <div class="gap-list">
+        <div class="gap-item">
+          <span class="gap-num mono">GAP 01</span>
+          <p><strong>One number, not four.</strong> The card assumed a single jackpot amount. Several feeds report tiered pools, grand, major, minor, mini. Fitting four into a card built for one meant shrinking the headline figure or hiding the rest behind a tap nobody knew about.</p>
+        </div>
+        <div class="gap-item">
+          <span class="gap-num mono">GAP 02</span>
+          <p><strong>Sort order, not priority.</strong> Providers always self sorted by pool size or game count. The business team sometimes needs a specific provider pinned to position one, a commercial deal, a launch push, and the layout had no attribute for that.</p>
+        </div>
+      </div>
+      <p class="body-text">The fix: a compact default state, a focused state revealing the full tier breakdown on interaction, and an order attribute that overrides sorting only when someone sets it.</p>
+    </section>
+
+    <section id="flows" class="divider">
+      <div class="section-head">
+        <span class="section-num">06 &middot; Core flows</span>
+        <h2>Compact by default, focused in turn</h2>
+      </div>
+      <p class="lede">The mechanics that carry the card from a dense grid to a full tier breakdown, reused across a growing list of providers.</p>
+
+      <div class="flow">
+        <div class="flow-head">
+          <span class="flow-num mono">01</span>
+          <h3>Compact grid</h3>
+        </div>
+        <p class="body-text">Provider identity, one headline pool, three key games. Dense enough to sit next to five or six siblings without competing for attention. This is what's live today, shown in Preview above.</p>
+      </div>
+
+      <div class="flow">
+        <div class="flow-head">
+          <span class="flow-num mono">02</span>
+          <h3>Auto rotation, desktop</h3>
+        </div>
+        <p class="body-text">Cards take their turn automatically, left to right, one expanded at a time for 5 seconds before handing off to the next. The cycle restarts after a full pass and loops indefinitely.</p>
+        <p class="body-text">Hovering pauses the sequence and holds that card open for as long as the pointer stays there. Moving away resumes left to right from that card. Chevrons for manual paging only appear while hovering the row.</p>
+      </div>
+
+      <div class="flow">
+        <div class="flow-head">
+          <span class="flow-num mono">03</span>
+          <h3>Center focus, mobile</h3>
+        </div>
+        <p class="body-text">No separate default and expanded state here, the centered card already shows everything: provider, amount, and games. Neighbors peek partially on each side. Swipe to move between them, looping infinitely in either direction.</p>
+      </div>
+
+      <div class="flow">
+        <div class="flow-head">
+          <span class="flow-num mono">04</span>
+          <h3>Configuration, not one off screens</h3>
+        </div>
+        <p class="body-text">The card is one component. What makes it hold up across a dozen providers is the layer around it.</p>
+      </div>
+      <div class="feature-grid wide">
+        <div class="feature">
+          <div class="feature-num mono">A</div>
+          <h3>Grouped by provider</h3>
+          <p>The same card, arranged as a provider rail, a category holding ordered sub layouts instead of a flat list.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-num mono">B</div>
+          <h3>Order attribute</h3>
+          <p>Pins a provider to a fixed slot, overriding pool size or game count sorting only when someone sets it.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-num mono">C</div>
+          <h3>Sort by</h3>
+          <p>Content teams choose provider name, pool size, or game count as the default sort. No design ticket per change.</p>
+        </div>
+        <div class="feature">
+          <div class="feature-num mono">D</div>
+          <h3>Feeder agnostic</h3>
+          <p>Reads a single total or a leveled, tiered feed without a template change on either end.</p>
+        </div>
+      </div>
+
+      <div class="flow">
+        <div class="flow-head">
+          <span class="flow-num mono">05</span>
+          <h3>Anatomy and provider system</h3>
+        </div>
+        <p class="body-text">Every provider gets its own container color, wordmark treatment, and background glow, defined once and reused everywhere the card appears. Default and focus states share the same anatomy, focus just reveals more of it.</p>
+      </div>
+      <div class="states-grid wide">
+        <div class="live-feature">
+          <img src="media/jackpot-state-default.jpg" alt="Jackpot card in its default state, smaller logo, no glow.">
+          <div class="evidence-cap">
+            <span class="num mono">DEFAULT</span>
+            <p>Smaller logo, glow off, the games row and link stay hidden until needed.</p>
+          </div>
+        </div>
+        <div class="live-feature">
+          <img src="media/jackpot-state-hover.jpg" alt="Jackpot card in its focus and hover state, wider, glowing, games row and link revealed.">
+          <div class="evidence-cap">
+            <span class="num mono">FOCUS / HOVER</span>
+            <p>Card widens, logo grows, glow turns on, and the games row with its link appears.</p>
+          </div>
+        </div>
+      </div>
+      <div class="colors-frame wide live-feature">
+        <img src="media/jackpot-colors.jpg" alt="Provider color system for the jackpot card: logo, container fill and stroke, wordmark, and amount pill for Yggdrasil, Playtech, Amusnet, Pragmatic Play, and EGT Digital, plus a neutral placeholder.">
+        <div class="evidence-cap">
+          <span class="num mono">PROVIDER COLORS</span>
+          <p>Each provider gets a fixed fill, stroke, and glow, defined once and reused everywhere the card appears. A neutral placeholder covers anything without a treatment yet.</p>
+        </div>
+      </div>
+      <div class="note">
+        <span class="tag">Amount animation</span>
+        <p>Each amount spins into place digit by digit, like a slot reel settling, once when the row scrolls into view and again whenever a new card takes its turn.</p>
+      </div>
+    </section>
+
+    <section id="impact" class="divider">
+      <div class="section-head">
+        <span class="section-num">07 &middot; Impact</span>
+        <h2>Both directions shipped</h2>
+      </div>
+      <div class="impact-grid">
+        <div class="impact-item">
+          <h3>Neither prototype lost</h3>
+          <p>Both directions from the study were approved for use, not a single winner and a discard.</p>
+        </div>
+        <div class="impact-item">
+          <h3>Reused for Providers</h3>
+          <p>The other direction was carried over shortly after into the Providers layout, the grouped rail next to it.</p>
+        </div>
+        <div class="impact-item">
+          <h3>One config, two surfaces</h3>
+          <p>The order attribute and sort by model shipped once and neither surface had to relitigate it.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="learnings" class="divider">
+      <div class="section-head">
+        <span class="section-num">08 &middot; Takeaways</span>
+        <h2>What I would tighten next time</h2>
+      </div>
+      <div class="learnings-list">
+        <div class="learning">
+          <span class="learning-num mono">01</span>
+          <div>
+            <h3>Time the rotation to the content, not the demo.</h3>
+            <p>Three games plus four tiers is a lot for a five second window. Pacing is still being tuned against how long people actually look.</p>
+          </div>
+        </div>
+        <div class="learning">
+          <span class="learning-num mono">02</span>
+          <div>
+            <h3>Document shared config before the second surface needs it.</h3>
+            <p>Running two accepted directions in parallel meant the order attribute and sort by model needed clear documentation up front. It lagged the second rollout by a few weeks.</p>
+          </div>
+        </div>
+        <div class="learning">
+          <span class="learning-num mono">03</span>
+          <div>
+            <h3>Decide the mobile pattern up front, not as a follow up.</h3>
+            <p>The center focus carousel is a real answer, not a compromise, but it was settled after the desktop pattern instead of alongside it.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="related">
+      <div class="related-label">More projects</div>
+      <div class="related-grid wide">
+        <a class="related-card" href="/search-filter/">
+          <div class="related-thumb placeholder">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" stroke="var(--text-dim)" stroke-width="1.6"/><line x1="15.3" y1="15.3" x2="21" y2="21" stroke="var(--text-dim)" stroke-width="1.6" stroke-linecap="round"/></svg>
+          </div>
+          <div class="related-body">
+            <span class="related-tag">Project 01</span>
+            <h3>Search & filter</h3>
+            <p>Search on the casino homepage used to hard redirect players away from a running game. Replaced with a non destructive modal, plus Filter and Style of Play to narrow the library by intent.</p>
+          </div>
+        </a>
+        <a class="related-card" href="/providers-layout/">
+          <div class="related-thumb placeholder">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="5" cy="12" r="1.6" fill="var(--text-dim)"/><circle cx="12" cy="12" r="1.6" fill="var(--text-dim)"/><circle cx="19" cy="12" r="1.6" fill="var(--text-dim)"/></svg>
+          </div>
+          <div class="related-body">
+            <span class="related-tag">Project 03</span>
+            <h3>Providers Layout</h3>
+            <p>A weekly "Provider of the Week" carousel, reusing the rotation pattern carried over from the Jackpot card study.</p>
+          </div>
+        </a>
+        <a class="related-card" href="/lobby-layouts/">
+          <div class="related-thumb placeholder">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1" stroke="var(--text-dim)" stroke-width="1.6"/><rect x="13" y="4" width="7" height="7" rx="1" stroke="var(--text-dim)" stroke-width="1.6"/><rect x="4" y="13" width="7" height="7" rx="1" stroke="var(--text-dim)" stroke-width="1.6"/><rect x="13" y="13" width="7" height="7" rx="1" stroke="var(--text-dim)" stroke-width="1.6"/></svg>
+          </div>
+          <div class="related-body">
+            <span class="related-tag">Project 04</span>
+            <h3>Various Lobby Layout Entry Point</h3>
+            <p>Four smaller lobby layouts, one page: hot and cold, top winners, best-of, and video.</p>
+          </div>
+        </a>
+      </div>
+      </div>
+
+    <footer>
+      <p class="fnote">&copy; The designs featured in my portfolio belong to the collaborating companies, each retaining its respective ownership. Any expressed opinions or viewpoints are solely my own and do not represent those of any company.</p>
+      <div class="links">
+        <a class="contact" href="mailto:outlandishvision@yahoo.com">Reach out</a>
+        <a class="contact" href="https://www.linkedin.com/in/jay-imtyas/" target="_blank" rel="noopener">LinkedIn</a>
+        <a class="contact" href="https://outlandishvision.framer.website/" target="_blank" rel="noopener" aria-label="Older portfolio (opens in a new tab)">Older portfolio<span class="ext" aria-hidden="true">&#8599;</span></a>
+      </div>
+    </footer>
+
+  </main>
+</div>
+
+<script>
+(function(){
+  // table of contents scrollspy
+  var tocLinks = Array.prototype.slice.call(document.querySelectorAll('.toc a'));
+  var sections = tocLinks.map(function(a){ return document.getElementById(a.getAttribute('href').slice(1)); }).filter(Boolean);
+  if('IntersectionObserver' in window && sections.length){
+    var observer = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        var link = document.querySelector('.toc a[href="#' + entry.target.id + '"]');
+        if(!link) return;
+        if(entry.isIntersecting){
+          tocLinks.forEach(function(l){ l.classList.remove('active'); });
+          link.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    sections.forEach(function(s){ observer.observe(s); });
+  }
+
+  // project switcher drawer
+  var btn = document.getElementById('hamburgerBtn');
+  var drawer = document.getElementById('drawer');
+  var scrim = document.getElementById('drawerScrim');
+  var closeBtn = document.getElementById('drawerClose');
+
+  function openDrawer(){
+    drawer.classList.add('is-open');
+    scrim.classList.add('is-open');
+    btn.setAttribute('aria-expanded', 'true');
+  }
+  function closeDrawer(){
+    drawer.classList.remove('is-open');
+    scrim.classList.remove('is-open');
+    btn.setAttribute('aria-expanded', 'false');
+    btn.focus();
+  }
+  btn.addEventListener('click', function(){
+    if(drawer.classList.contains('is-open')) closeDrawer(); else openDrawer();
+  });
+  closeBtn.addEventListener('click', closeDrawer);
+  scrim.addEventListener('click', closeDrawer);
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && drawer.classList.contains('is-open')) closeDrawer();
+  });
+})();
+</script>
+</body>
+</html>

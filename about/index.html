@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About, Jay Imtyas</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,500..600&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg: #FAF6EE;
+    --surface: #FFFFFF;
+    --surface-2: #F2E9D6;
+    --text: #1B160F;
+    --text-dim: #6E6455;
+    --border: #E4D8BE;
+    --accent: #A9711A;
+    --accent-2: #7A5313;
+    --accent-ink: #FFFFFF;
+    --shadow: 0 1px 2px rgba(27,22,15,.04), 0 8px 24px rgba(27,22,15,.06);
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg: #14110C;
+      --surface: #1D1912;
+      --surface-2: #262019;
+      --text: #F3ECDD;
+      --text-dim: #AA9F89;
+      --border: #362F20;
+      --accent: #E7A93E;
+      --accent-2: #C98F2E;
+      --accent-ink: #1B160F;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.45);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg: #14110C;
+    --surface: #1D1912;
+    --surface-2: #262019;
+    --text: #F3ECDD;
+    --text-dim: #AA9F89;
+    --border: #362F20;
+    --accent: #E7A93E;
+    --accent-2: #C98F2E;
+    --accent-ink: #1B160F;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.45);
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box;}
+  html{font-size:113%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Archivo', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.65;
+  }
+  h1,h2,h3{
+    font-family:'Fraunces', Georgia, serif;
+    font-weight:600;
+    text-wrap:balance;
+    margin:0;
+    color:var(--text);
+    font-variation-settings:"SOFT" 20;
+  }
+  .mono{font-family:'IBM Plex Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums;}
+  a{color:inherit;}
+  p{margin:0;}
+  ul{margin:0; padding:0; list-style:none;}
+  img{max-width:100%;}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    background:color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom:1px solid var(--border);
+  }
+  .topbar-inner{
+    max-width:900px; margin:0 auto; padding:16px 48px;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:16px;
+  }
+  .brand{font-size:.82rem; letter-spacing:.02em; color:var(--text-dim); text-decoration:none;}
+  .brand b{color:var(--text); font-weight:600;}
+  .topnav{display:flex; align-items:center; gap:26px;}
+  .topnav a{
+    font-family:'IBM Plex Mono', monospace; font-size:.74rem; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--text-dim); text-decoration:none;
+  }
+  .topnav a:hover{color:var(--accent);}
+
+  .wrap{max-width:900px; margin:0 auto; padding:0 48px 72px;}
+
+  .hero{padding:64px 0 40px;}
+  .eyebrow{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.76rem; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--accent);
+    margin-bottom:20px;
+  }
+  h1{font-size:clamp(2.2rem, 5vw, 3.2rem); letter-spacing:-.015em; line-height:1.02;}
+
+  section{padding:40px 0; border-top:1px solid var(--border);}
+  .hero + section{border-top:none; padding-top:0;}
+  .section-label{
+    font-family:'IBM Plex Mono', monospace; font-size:.74rem; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--text-dim); margin-bottom:18px;
+  }
+  .lede{font-family:'Fraunces', serif; font-style:italic; font-weight:500; font-size:1.28rem; line-height:1.55; color:var(--text);}
+  .body-text{font-size:1.06rem; color:var(--text-dim); margin-top:16px; line-height:1.65;}
+  .body-text + .body-text{margin-top:14px;}
+  .body-text strong{color:var(--text); font-weight:600;}
+
+  .chip-row{display:flex; flex-wrap:wrap; gap:10px; margin-top:6px;}
+  .chip{
+    font-family:'IBM Plex Mono', monospace; font-size:.82rem;
+    padding:7px 14px; border-radius:999px; border:1px solid var(--border);
+    background:var(--surface); color:var(--text);
+  }
+
+  .skill-grid{display:grid; grid-template-columns:1fr 1fr; gap:28px 40px; margin-top:6px;}
+  .skill-grid h3{font-size:1rem; font-family:'Archivo', sans-serif; font-weight:600;}
+  .skill-grid p{margin-top:8px; font-size:.94rem; color:var(--text-dim); line-height:1.6;}
+
+  .tools-group{margin-top:22px;}
+  .tools-group:first-child{margin-top:0;}
+  .tools-group-label{
+    font-family:'IBM Plex Mono', monospace; font-size:.7rem; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--accent-2); margin-bottom:10px; display:block;
+  }
+
+  .cta{
+    margin-top:0; padding:36px; border-radius:14px;
+    background:var(--surface); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap;
+  }
+  .cta h2{font-size:1.5rem;}
+  .cta p{margin-top:8px; font-size:.98rem; color:var(--text-dim);}
+  .cta a.contact{
+    font-family:'IBM Plex Mono', monospace; font-size:.86rem;
+    color:var(--accent); text-decoration:none; border-bottom:1px solid transparent; flex:none;
+  }
+  .cta a.contact:hover{border-bottom-color:var(--accent);}
+
+  footer{
+    border-top:1px solid var(--border);
+    padding:34px 48px 60px;
+    max-width:900px; margin:0 auto;
+    display:flex; justify-content:space-between; align-items:flex-start;
+    flex-wrap:wrap; gap:24px;
+  }
+  footer .fnote{font-size:.8rem; color:var(--text-dim); line-height:1.55; max-width:52ch;}
+  footer .links{display:flex; align-items:center; gap:20px; flex:none;}
+  footer a.contact{
+    font-family:'IBM Plex Mono', monospace; font-size:.82rem;
+    color:var(--accent); text-decoration:none; border-bottom:1px solid transparent;
+  }
+  footer a.contact:hover{border-bottom-color:var(--accent);}
+  footer a.contact .ext{display:inline-block; margin-left:2px; font-size:.9em;}
+
+  @media (max-width: 720px){
+    .topbar-inner, .wrap, footer{padding-left:24px; padding-right:24px;}
+    .skill-grid{grid-template-columns:1fr;}
+    .cta{flex-direction:column; align-items:flex-start;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="/"><b>Jay Imtyas</b> &middot; Lead Product Designer</a>
+    <nav class="topnav">
+      <a href="/">Work</a>
+      <a href="mailto:outlandishvision@yahoo.com">Contact</a>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="hero">
+    <span class="eyebrow">About</span>
+    <h1>Lead product designer, casino vertical at Novibet</h1>
+  </div>
+
+  <section>
+    <p class="lede">I started in art direction, then moved into product design. What carried over is the eye for craft. What's changed is the approach: more systems thinking, more ownership, less one-off screens.</p>
+    <p class="body-text">I lead product design for Novibet's casino vertical, working closely with product and engineering to take ideas from problem to shipped feature. Part of the role is pushing for more process discipline on the team: clearer intake, clearer documentation, decisions that hold up when someone asks why later.</p>
+    <p class="body-text">I care about the reasoning behind a decision as much as the decision itself: what was tested, what was assumed, and what I'd want to check given more time. That's the bar I hold my own work to, whether it ships clean or not.</p>
+  </section>
+
+  <section>
+    <div class="section-label">Expertise</div>
+    <div class="chip-row">
+      <span class="chip">Product Design</span>
+      <span class="chip">UX / Experience Design</span>
+      <span class="chip">UI / Interface Design</span>
+      <span class="chip">Visual Design</span>
+      <span class="chip">Design Systems</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-label">Key skills</div>
+    <div class="skill-grid">
+      <div>
+        <h3>Product thinking</h3>
+        <p>Starting from the problem and the player, not the screen.</p>
+      </div>
+      <div>
+        <h3>Interaction design</h3>
+        <p>How something behaves, not just how it looks: states, transitions, edge cases.</p>
+      </div>
+      <div>
+        <h3>Information architecture</h3>
+        <p>Structuring content and navigation so complexity stays easy to scan.</p>
+      </div>
+      <div>
+        <h3>Systems thinking</h3>
+        <p>Designing configuration, not one-off screens: order attributes, sort rules, and shared components that hold up across a dozen providers.</p>
+      </div>
+      <div>
+        <h3>Prototyping</h3>
+        <p>Figma-first, from low-fidelity flows through to production-ready, developer-handoff specs.</p>
+      </div>
+      <div>
+        <h3>Visual design</h3>
+        <p>Pixel-perfect UI, type and color systems, motion and micro-interaction detail.</p>
+      </div>
+      <div>
+        <h3>Outcome thinking</h3>
+        <p>Judging a decision by what it changed, not just that it shipped.</p>
+      </div>
+      <div>
+        <h3>Cross-functional collaboration</h3>
+        <p>Working directly with engineering and product in an Agile environment, including handoff specs precise enough to implement without a design re-review per change.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-label">Tools</div>
+    <div class="tools-group">
+      <span class="tools-group-label">Design</span>
+      <div class="chip-row">
+        <span class="chip">Figma</span>
+        <span class="chip">Photoshop</span>
+        <span class="chip">Illustrator</span>
+        <span class="chip">After Effects</span>
+        <span class="chip">Premiere Pro</span>
+        <span class="chip">InDesign</span>
+        <span class="chip">Cinema 4D</span>
+        <span class="chip">Webflow</span>
+        <span class="chip">Framer</span>
+      </div>
+    </div>
+    <div class="tools-group">
+      <span class="tools-group-label">AI</span>
+      <div class="chip-row">
+        <span class="chip">Claude</span>
+        <span class="chip">ChatGPT</span>
+        <span class="chip">Gemini</span>
+      </div>
+      <p class="body-text" style="margin-top:12px;">Used day to day to speed up and sharpen the work, drafting and iterating faster, and as a shared reference point when collaborating with frontend developers and the product team.</p>
+    </div>
+    <div class="tools-group">
+      <span class="tools-group-label">Project &amp; process</span>
+      <div class="chip-row">
+        <span class="chip">Notion</span>
+        <span class="chip">Linear</span>
+        <span class="chip">Jira</span>
+        <span class="chip">Maze</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="cta">
+      <div>
+        <h2>Open to new challenges</h2>
+        <p>Always happy to talk through a project, a role, or just compare notes on process.</p>
+      </div>
+      <a class="contact" href="mailto:outlandishvision@yahoo.com">Reach out &rarr;</a>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <p class="fnote">&copy; The designs featured in my portfolio belong to the collaborating companies, each retaining its respective ownership. Any expressed opinions or viewpoints are solely my own and do not represent those of any company.</p>
+  <div class="links">
+    <a class="contact" href="mailto:outlandishvision@yahoo.com">Reach out</a>
+    <a class="contact" href="https://www.linkedin.com/in/jay-imtyas/" target="_blank" rel="noopener">LinkedIn</a>
+    <a class="contact" href="https://outlandishvision.framer.website/" target="_blank" rel="noopener" aria-label="Older portfolio (opens in a new tab)">Older portfolio<span class="ext" aria-hidden="true">&#8599;</span></a>
+  </div>
+</footer>
+</body>
+</html>
